@@ -18,13 +18,6 @@ public class GobalExceptionHander {
 
     private static final  String MIN_ATRIBUTE="min";
 
-    @ExceptionHandler(value=Exception.class)
-    ResponseEntity<APIResponse> handlingRuntimeException(RuntimeException exception){
-        APIResponse apiResponse=new APIResponse();
-        apiResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
-        apiResponse.setMesage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
-        return  ResponseEntity.badRequest().body(apiResponse);
-    }
 
     @ExceptionHandler(value=AppException.class)
     ResponseEntity<APIResponse> handlingRuntimeException(AppException exception){

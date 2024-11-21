@@ -7,35 +7,32 @@ spring:
     url: "jdbc:postgresql://localhost:5432/iamservice"
     username: postgres
     password: "@Chuxuanloc26032003"
+  mail:
+    host: "smtp.gmail.com"
+    port: 587
+    username: chuxuanloc2003@gmail.com
+    password: qhrv rtvp bzwp uhau
+    # Sử dụng mật khẩu ứng dụng ở đây
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
   jpa:
     hibernate:
-      ddl-auto: update
+#      ddl-auto: update
       dialect: org.hibernate.dialect.PostgreSQLDialect  # Chỉ định Dialect cho PostgreSQL
     show-sql: true
-
+security:
+  authentication:
+    jwt:
+      key-store : keystore.jks
+      key-store-password: cxlcxl
+      key-alias: viz
 
 jwt:
   signerKey: "wLaWr3+TMVjaUszxtX1Ib2sAjIPSW1IC5fmHmEhjFt9IX+LsYA1Ts8YMLUq5nOap"
-  privateKey: "-----BEGIN RSA PRIVATE KEY-----
-MIICWgIBAAKBgHTyDm2Ooc1Q4YZ4OX/4Hd4eIoK72Ol4kIrbOTdNkWvHDJGbD1vI
-nst7V3lsYRF1Qx2BmcOu4vE3NqmO4WmhmzxjGEAGcQL2RgEoGz0ix2IYLDOnwPzR
-+D11Y18QipBy4QoDng/eLKRTlVsOKN1WZnnGPO8XwZVLaPt9RpbxkKcZAgMBAAEC
-gYBE0AXDW5FDwdriiC21aicRAwRljuklACd1PWfebcsq8xYnO2l/JX6i1zHypd48
-KpbSbucuqOKq80U74nIq+MfhoC45Wc760TrOaFT0Vuqm+ZPLpncNbnh7Dya5Yj/C
-5/nHHCqs+FEtIUkjEBI8jg7OjCAkaY/oqCYauFhR2MaSMQJBANuoitkD1dyB2yvI
-ZP9rUSOj/yycSdla7EImUm4c1H4wHOj+22+700SkmnQbraMiupm4nAOHXtVxvRJW
-NF+7NKUCQQCISzFIpF78zGA5Y37socp+JkCq5V5d5gS1EZ3nmclC12wV2amUsoPI
-hjPKmnnKW4dI8DWsJ1g+YiGH2yJLkbplAkAGOH+2JaWo2QSb+NDjauahW8OeP87X
-mPuX4/3xoF9kM3ieIJmWUHtrNj4pi58fP5yJPfEtKGhHIzF3k3loPKUBAkAHOg1z
-75tFxkR35omtXGrTQ438Qcs+KVsoirWXuTTNwYRuqCrwwoJwWIVYgdZhX3cN7Aa8
-iR2JuURT4s+vuBttAkBc1YOS6g314JYyo4+xA6gmn7JJ87ibo+QHUqFl8wHnDqsr
-w0PpEQqbe6aut+To2dD4VVpTpPc5swjW1UM0QJ9K
------END RSA PRIVATE KEY-----"
-  publicKey: "-----BEGIN PUBLIC KEY-----
-MIGeMA0GCSqGSIb3DQEBAQUAA4GMADCBiAKBgHTyDm2Ooc1Q4YZ4OX/4Hd4eIoK7
-2Ol4kIrbOTdNkWvHDJGbD1vInst7V3lsYRF1Qx2BmcOu4vE3NqmO4WmhmzxjGEAG
-cQL2RgEoGz0ix2IYLDOnwPzR+D11Y18QipBy4QoDng/eLKRTlVsOKN1WZnnGPO8X
-wZVLaPt9RpbxkKcZAgMBAAE=
------END PUBLIC KEY-----"
   valid-duration: 3600 #in second
   refreshable-duration: 360000 #insecond
+
+
+

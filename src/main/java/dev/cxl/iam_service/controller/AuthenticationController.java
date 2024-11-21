@@ -6,14 +6,12 @@ import dev.cxl.iam_service.dto.response.AuthenticationResponse;
 import dev.cxl.iam_service.dto.response.IntrospectResponse;
 import dev.cxl.iam_service.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
+import dev.cxl.iam_service.service.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
 
@@ -26,6 +24,8 @@ public class AuthenticationController {
 
     @Autowired
     AuthenticationService authenticationService;
+    @Autowired
+    UserService userService;
 
     @PostMapping("/login")
     APIResponse<AuthenticationResponse> authenticationResponseAPIResponse(@RequestBody AuthenticationRequest request){
@@ -49,12 +49,28 @@ public class AuthenticationController {
 
     }
     @PostMapping("/refresh")
-    APIResponse<AuthenticationResponse> logout(@RequestBody RefreshRequest request) throws ParseException, JOSEException {
+    APIResponse<AuthenticationResponse> logout(@RequestBody RefreshRequest request) throws Exception {
         return APIResponse.<AuthenticationResponse>builder()
                 .result(authenticationService.refreshToken(request))
                 .build();
 
     }
+    @PostMapping("/send-email")
+    APIResponse<String> sendemail (@RequestParam("email") String email){
+       userService.sendotp(email);
+        return APIResponse.<String>builder()
+                        .result("Chuc ban thanh cong")
+                        .build();
+    }
+    @PutMapping("/change-pass")
+    APIResponse<Boolean> changePass (@RequestBody ForgotPassWord forgotPassWord){
+
+        return APIResponse.<Boolean>builder()
+                .result(userService.checkotp(forgotPassWord))
+                .build();
+    }
+
+
 
 
 }

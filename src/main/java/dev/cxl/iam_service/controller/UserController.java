@@ -7,6 +7,7 @@ import dev.cxl.iam_service.dto.request.UserUpdateRequest;
 import dev.cxl.iam_service.dto.response.UserResponse;
 import dev.cxl.iam_service.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.websocket.server.PathParam;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,7 @@ public class UserController {
     private UserService userService;
 
     @PostMapping
-    APIResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request){
+    APIResponse<UserResponse> createUser(@PathParam("avata") String avatar, @RequestBody @Valid UserCreationRequest request){
 
      return APIResponse.<UserResponse>builder()
              .result(userService.createUser(request))

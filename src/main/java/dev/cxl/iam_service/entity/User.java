@@ -19,14 +19,14 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
      String userID;
-    
      String userMail;
      String passWord;
      String firstName;
      String lastName;
      LocalDate dateOfBirth;
-     @ManyToMany(fetch = FetchType.EAGER)
-     Set<Role> roles;
+     String avatar;
+     Set<String> roles;
+
 
 
 }

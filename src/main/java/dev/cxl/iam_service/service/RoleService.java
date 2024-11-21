@@ -23,14 +23,10 @@ public class RoleService {
     RoleRepository roleRepository;
     @Autowired
     RoleMapper roleMapper;
-    @Autowired
-    PermissionRespository permissionRespository;
+
 
     public RoleResponse create(RoleRequest request){
        Role role= roleMapper.toRole(request);
-
-        var permissions = permissionRespository.findAllById(request.getPermissions());
-        role.setPermissions(new HashSet<>(permissions));
         role = roleRepository.save(role);
         return roleMapper.toRoleResponse(role);
     }

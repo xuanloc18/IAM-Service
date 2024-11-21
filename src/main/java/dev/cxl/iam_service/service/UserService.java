@@ -1,9 +1,7 @@
 package dev.cxl.iam_service.service;
 
 
-import dev.cxl.iam_service.dto.request.UserCreationRequest;
-import dev.cxl.iam_service.dto.request.UserRepalcePass;
-import dev.cxl.iam_service.dto.request.UserUpdateRequest;
+import dev.cxl.iam_service.dto.request.*;
 import dev.cxl.iam_service.dto.response.UserResponse;
 import dev.cxl.iam_service.entity.Role;
 import dev.cxl.iam_service.entity.User;
@@ -23,9 +21,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Service
@@ -39,6 +37,11 @@ public class UserService {
     private RoleRepository  roleRepository;
     @Autowired
     PasswordEncoder passwordEncoder;
+    @Autowired
+    EmailService emailService;
+
+    private HashMap<String,String> checkotp=new HashMap<>();
+
     public UserResponse createUser(UserCreationRequest request){
 
     if(userRespository.existsByUserMail(request.getUserMail())){
@@ -46,9 +49,9 @@ public class UserService {
     }
     User user=userMapper.toUser(request);
         user.setPassWord(passwordEncoder.encode(request.getPassWord()));
-        HashSet<Role> roles=new HashSet<>();
-        var role=roleRepository.findById(dev.cxl.iam_service.enums.Role.USER.name()).orElseThrow(()-> new RuntimeException(""));
-        roles.add(role);
+        HashSet<String> roles=new HashSet<>();
+        if(CollectionUtils.isEmpty(user.getRoles())) roles.add("USER");
+
       user.setRoles(roles);
     return  userMapper.toUserResponse(userRespository.save(user)) ;
     }
@@ -58,8 +61,6 @@ public class UserService {
         User user=userRespository.findById(userID).orElseThrow(()->new RuntimeException("user not found"));
         user=userMapper.updateUser(user,request);
         user.setPassWord(passwordEncoder.encode(request.getPassWord()));
-       var roles=roleRepository.findAllById(request.getRoles());
-       user.setRoles(new HashSet<>(roles));
         return userMapper.toUserResponse(userRespository.save(user));
     }
     public UserResponse getMyInfor(){
@@ -83,6 +84,28 @@ public class UserService {
         log.info(user.getPassWord());
         userRespository.save(user);
         return true;
+    }
+    public  String sendotp(String email){
+        userRespository.findByUserMail(email)
+                .orElseThrow(()-> new AppException(ErrorCode.USER_NOT_EXISTED));
+        Integer otp = 100000 + (int) (Math.random() * 900000);
+        checkotp.put(email,otp.toString());
+        emailService.SendEmail(email,otp.toString());
+        return "Chúc bạn thành công";
+    }
+    public Boolean checkotp(ForgotPassWord forgotPassWord){
+        String otpcheck = checkotp.get(forgotPassWord.getOtp());
+        if(otpcheck.isEmpty()){
+            return false;
+        }
+        if(forgotPassWord.getOtp().equals(otpcheck))
+        {
+            User user =userRespository.findByUserMail(forgotPassWord.getUserMail()).orElseThrow(()->new AppException(ErrorCode.USER_NOT_EXISTED));
+            user.setPassWord(forgotPassWord.getNewPass());
+            userRespository.save(user);
+            return true;
+        }
+        return false;
     }
 
 

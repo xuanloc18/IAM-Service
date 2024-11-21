@@ -1,5 +1,7 @@
 package dev.cxl.iam_service.service;
-
+import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.crypto.RSASSAVerifier;
+import dev.cxl.iam_service.dto.AuthenticationProperties;
 import dev.cxl.iam_service.dto.request.AuthenticationRequest;
 import dev.cxl.iam_service.dto.request.IntrospectRequest;
 import dev.cxl.iam_service.dto.request.LogoutRequest;
@@ -7,15 +9,16 @@ import dev.cxl.iam_service.dto.request.RefreshRequest;
 import dev.cxl.iam_service.dto.response.AuthenticationResponse;
 import dev.cxl.iam_service.dto.response.IntrospectResponse;
 import dev.cxl.iam_service.entity.InvalidateToken;
+import dev.cxl.iam_service.entity.Permission;
+import dev.cxl.iam_service.entity.Role;
 import dev.cxl.iam_service.entity.User;
 import dev.cxl.iam_service.exception.AppException;
 import dev.cxl.iam_service.exception.ErrorCode;
 import dev.cxl.iam_service.respository.InvalidateTokenRepository;
+import dev.cxl.iam_service.respository.PermissionRespository;
 import dev.cxl.iam_service.respository.RoleRepository;
 import dev.cxl.iam_service.respository.UserRespository;
 import com.nimbusds.jose.*;
-import com.nimbusds.jose.crypto.MACSigner;
-import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import lombok.AccessLevel;
@@ -26,20 +29,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-
+import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.List;
 import java.util.StringJoiner;
 import java.util.UUID;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@EnableConfigurationProperties(AuthenticationProperties.class)
 @RequiredArgsConstructor//là một annotation trong Lombok tự động tạo constructor cho các trường (fields) có giá trị là final hoặc được đánh dấu là @NonNull
 public class AuthenticationService {
     private static final Logger log = LoggerFactory.getLogger(AuthenticationService.class);
@@ -52,10 +58,15 @@ public class AuthenticationService {
     @Value("${jwt.refreshable-duration}")
     protected   Long REFESHABLE_DURATION;
     @NonFinal
-    @Value("${jwt.signerKey}")
-    protected   String SINGER_KEY;
     @Autowired
     private InvalidateTokenRepository invalidateTokenRepository;
+    @Autowired
+    KeyProvider keyProvider;
+    @Autowired
+    RoleRepository roleRepository;
+    @Autowired
+    PermissionRespository permissionRespository;
+
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException,ParseException {
         var token = request.getToken();
@@ -64,7 +75,6 @@ public class AuthenticationService {
            verifyToken(token,false);
        }catch (AppException appException){
            valid=false;
-
        }
        return  IntrospectResponse.builder()
                .valid(valid)
@@ -79,7 +89,6 @@ public class AuthenticationService {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
 
         }
-        User user1 = userRespository.findByUserMail(authenticationRequest.getUserMail()).orElseThrow(()->new AppException(ErrorCode.USER_NOT_EXISTED));
         var token=generrateToken(authenticationRequest.getUserMail());
         return  AuthenticationResponse.builder()
                 .token(token)
@@ -89,7 +98,7 @@ public class AuthenticationService {
 
     private String generrateToken (String username){
         User user=(userRespository.findByUserMail(username)).orElseThrow(()->new RuntimeException());
-        JWSHeader header=new JWSHeader(JWSAlgorithm.HS512);
+        JWSHeader header=new JWSHeader(JWSAlgorithm.RS256);
         JWTClaimsSet jwtClaimsSet=new JWTClaimsSet.Builder()
                 .subject(user.getUserID().toString())
                 .issuer("cxl")
@@ -104,7 +113,7 @@ public class AuthenticationService {
         JWSObject jwsObject=new JWSObject(header,payload);
 
         try {
-            jwsObject.sign(new MACSigner(SINGER_KEY.getBytes()));
+            jwsObject.sign(new RSASSASigner(keyProvider.getKeyPair().getPrivate()));
             return jwsObject.serialize();
         } catch (JOSEException e) {
             log.error("can not create token",e);
@@ -114,10 +123,12 @@ public class AuthenticationService {
     private  String buildScrope(User user){
         StringJoiner stringJoiner=new StringJoiner(" ");//các phần tử cách nhau bới " "
         if(!CollectionUtils.isEmpty(user.getRoles())){
-            user.getRoles().forEach(role-> {
+            List<Role> roles = roleRepository.findAllById(user.getRoles());
+            roles.forEach(role-> {
                         stringJoiner.add(role.getName());
                         if(!CollectionUtils.isEmpty(role.getPermissions())) {
-                            role.getPermissions().forEach(permission -> stringJoiner.add(permission.getName()));
+                            List<Permission> permissions= permissionRespository.findAllById(role.getPermissions());
+                            permissions.forEach(permission -> stringJoiner.add(permission.getName()));
                         }
                     }
             );
@@ -128,12 +139,12 @@ public class AuthenticationService {
     }
     private SignedJWT verifyToken(String token,boolean isRefresh) throws ParseException, JOSEException {
         SignedJWT signedJWT=SignedJWT.parse(token);
-        JWSVerifier verifier=new MACVerifier(SINGER_KEY.getBytes());
+        RSASSAVerifier rsassaVerifier= new RSASSAVerifier((RSAPublicKey) keyProvider.getKeyPair().getPublic());
         Date expiryTime = (isRefresh)
                 ?new Date(signedJWT.getJWTClaimsSet().getIssueTime().toInstant().plus(REFESHABLE_DURATION,ChronoUnit.SECONDS).toEpochMilli())
                 :signedJWT.getJWTClaimsSet().getExpirationTime();
 
-        boolean veri=signedJWT.verify(verifier);
+        boolean veri=signedJWT.verify(rsassaVerifier);
         if(!(veri&&expiryTime.after(new Date()))){
             throw  new  AppException(ErrorCode.UNAUTHENTICATED);
         }
@@ -142,7 +153,6 @@ public class AuthenticationService {
         }
         return  signedJWT;
     }
-
 
     public    void  logout(LogoutRequest request) throws ParseException, JOSEException {
             try{

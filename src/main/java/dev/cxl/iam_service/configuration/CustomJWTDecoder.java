@@ -3,6 +3,7 @@ package dev.cxl.iam_service.configuration;
 import dev.cxl.iam_service.dto.request.IntrospectRequest;
 import dev.cxl.iam_service.service.AuthenticationService;
 import com.nimbusds.jose.JOSEException;
+import dev.cxl.iam_service.service.KeyProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -13,6 +14,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.spec.SecretKeySpec;
+import java.security.KeyPair;
+import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.util.Objects;
 
@@ -20,9 +23,10 @@ import java.util.Objects;
 public class CustomJWTDecoder implements JwtDecoder {
     @Autowired
     private AuthenticationService authenticationService;
-    private NimbusJwtDecoder nimbusJwtDecoder=null;
-    @Value("${jwt.signerKey}")
-    private  String SINGER_KEY;
+    @Autowired
+    private KeyProvider keyProvider;
+    private NimbusJwtDecoder nimbusJwtDecoder;
+    KeyPair keyPair;
     @Override
     public Jwt decode(String token) throws JwtException {
 
@@ -37,12 +41,11 @@ public class CustomJWTDecoder implements JwtDecoder {
             throw new JwtException(e.getMessage());
 
         }
-        if (Objects.isNull(nimbusJwtDecoder)){//check xem nếu nimbus đã được tao thì chỉ mang ra duùng
-            SecretKeySpec secretKeySpec=new SecretKeySpec(SINGER_KEY.getBytes(),"HS512");
-            nimbusJwtDecoder=NimbusJwtDecoder.withSecretKey(secretKeySpec)
-                    .macAlgorithm(MacAlgorithm.HS512)
+        keyPair=keyProvider.getKeyPair();
+        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic(); // Phương thức này sẽ trả về public key RSA từ AuthenticationService
+            nimbusJwtDecoder=NimbusJwtDecoder.withPublicKey(publicKey)
                     .build();
-        }
+
 
 
 

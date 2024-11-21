@@ -28,9 +28,8 @@ public class ApplicationInitConfig {
     ApplicationRunner applicationRunner (UserRespository userRespository){
        return  args -> {//args đại diện cho các câu lệnh
            if(userRespository.findByUserMail("admin@gmail.com").isEmpty()){
-              Set<Role> roles=new HashSet<>();
-              var role=roleRepository.findById(dev.cxl.iam_service.enums.Role.ADMIN.name()).orElseThrow(()->new RuntimeException(""));
-              roles.add(role);
+              Set<String> roles=new HashSet<>();
+              roles.add("ADMIN");
                User user= User.builder()
                        .userMail("admin@gmail.com")
                        .passWord(passwordEncoder.encode("admin"))
