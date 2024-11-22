@@ -19,10 +19,10 @@ public class UserController {
     private UserService userService;
 
     @PostMapping
-    APIResponse<UserResponse> createUser(@RequestBody @Valid UserCreationRequest request) {
-
-        return APIResponse.<UserResponse>builder()
-                .result(userService.createUser(request))
+    APIResponse<String> createUser(@RequestBody @Valid UserCreationRequest request) {
+        userService.createUser(request);
+        return APIResponse.<String>builder()
+                .result("Mời bạn vào email xác thực đăng kí")
                 .build();
     }
 
