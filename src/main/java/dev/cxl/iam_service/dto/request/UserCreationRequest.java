@@ -1,11 +1,12 @@
 package dev.cxl.iam_service.dto.request;
 
+import java.time.LocalDate;
 
 import jakarta.validation.constraints.Size;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.time.LocalDate;
 @Data
 @Builder
 @NoArgsConstructor
@@ -14,11 +15,11 @@ import java.time.LocalDate;
 public class UserCreationRequest {
 
     String userMail;
-    @Size(min = 8,message = "PASSWORD_EXCEPION")
+
+    @Size(min = 8, message = "PASSWORD_EXCEPION")
     String passWord;
+
     String firstName;
     String lastName;
     LocalDate dateOfBirth;
-
 }
-

@@ -1,7 +1,5 @@
 package dev.cxl.iam_service.dto.request;
 
-import java.util.Set;
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -10,9 +8,8 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class RoleRequest {
+public class AuthenticationRequestTwo {
 
-    String name;
-    String description;
-    Set<String> permissions;
+    String userMail;
+    String otp;
 }

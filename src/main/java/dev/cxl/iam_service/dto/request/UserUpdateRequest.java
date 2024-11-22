@@ -1,11 +1,10 @@
 package dev.cxl.iam_service.dto.request;
 
+import java.time.LocalDate;
+import java.util.Set;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Set;
 
 @Data
 @Builder
@@ -14,14 +13,9 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserUpdateRequest {
 
-   String passWord;
-   String firstName;
-   String lastName;
-   LocalDate dateOfBirth;
-   Set<String> roles;
-
-
+    String passWord;
+    String firstName;
+    String lastName;
+    LocalDate dateOfBirth;
+    Set<String> roles;
 }
-
-
-

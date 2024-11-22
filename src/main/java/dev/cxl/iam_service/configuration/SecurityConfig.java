@@ -1,5 +1,7 @@
 package dev.cxl.iam_service.configuration;
 
+import javax.crypto.spec.SecretKeySpec;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16,46 +18,49 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-import javax.crypto.spec.SecretKeySpec;
-
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-    private  final String[] PUBLIC_ENPOINTS={"/users","/auth/login","/auth/introspect","/auth/logout","/auth/refresh"};
+    private final String[] PUBLIC_ENPOINTS = {
+        "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh"
+    };
+
     @Value("${jwt.signerKey}")
     private String signerKey;
+
     @Autowired
-    private  CustomJWTDecoder customJWTDecoder;
+    private CustomJWTDecoder customJWTDecoder;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.authorizeHttpRequests(request->
-                request.requestMatchers(HttpMethod.POST,PUBLIC_ENPOINTS).permitAll()
+        httpSecurity.authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, PUBLIC_ENPOINTS)
+                .permitAll()
+                .requestMatchers(HttpMethod.GET, "/users")
+                .hasAuthority("SCOPE_ADMIN") // là admin mới cho vào
+                .anyRequest()
+                .permitAll());
 
-                        .requestMatchers(HttpMethod.GET,"/users")
-                        .hasAuthority("SCOPE_ADMIN")// là admin mới cho vào
-
-                        .anyRequest().permitAll());
-
-        httpSecurity.oauth2ResourceServer(oauth->
-                oauth.jwt(jwtConfigurer -> jwtConfigurer.decoder(customJWTDecoder))
-                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint())//authenticationEntryPoint để bắt các lỗi chưa xác thực
-        );
-        httpSecurity.csrf(AbstractHttpConfigurer::disable);// tắt csrf để có thể sủ dụng authorizeHttpRequests
+        httpSecurity.oauth2ResourceServer(
+                oauth -> oauth.jwt(jwtConfigurer -> jwtConfigurer.decoder(customJWTDecoder))
+                        .authenticationEntryPoint(
+                                new JwtAuthenticationEntryPoint()) // authenticationEntryPoint để bắt các lỗi chưa xác
+                // thực
+                );
+        httpSecurity.csrf(AbstractHttpConfigurer::disable); // tắt csrf để có thể sủ dụng authorizeHttpRequests
         return httpSecurity.build();
     }
+
     @Bean
-    JwtDecoder jwtDecoder(){
-        SecretKeySpec secretKeySpec=new SecretKeySpec(signerKey.getBytes(),"HS512");//private key
-        return NimbusJwtDecoder
-                .withSecretKey(secretKeySpec)
+    JwtDecoder jwtDecoder() {
+        SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), "HS512"); // private key
+        return NimbusJwtDecoder.withSecretKey(secretKeySpec)
                 .macAlgorithm(MacAlgorithm.HS512)
                 .build();
     }
+
     @Bean
-    PasswordEncoder passwordEncoder(){
+    PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
     }
-
-
 }

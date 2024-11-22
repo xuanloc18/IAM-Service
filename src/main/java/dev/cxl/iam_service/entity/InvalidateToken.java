@@ -1,11 +1,12 @@
 package dev.cxl.iam_service.entity;
 
+import java.util.Date;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-
-import java.util.Date;
 
 @Entity
 @Builder
@@ -16,5 +17,6 @@ import java.util.Date;
 public class InvalidateToken {
     @Id
     String id;
+
     Date expiryTime;
 }

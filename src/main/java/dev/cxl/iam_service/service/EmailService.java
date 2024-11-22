@@ -10,12 +10,12 @@ public class EmailService {
 
     @Autowired
     private JavaMailSender javaMailSender;
-    public void SendEmail(String email,String otp){
 
-        SimpleMailMessage message=new SimpleMailMessage();
+    public void SendEmail(String email, String otp) {
+
+        SimpleMailMessage message = new SimpleMailMessage();
         message.setTo(email);
         message.setText(otp.toString());
         javaMailSender.send(message);
     }
-
 }

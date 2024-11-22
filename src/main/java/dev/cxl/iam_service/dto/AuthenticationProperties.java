@@ -1,7 +1,8 @@
 package dev.cxl.iam_service.dto;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import lombok.Data;
 
 @ConfigurationProperties(prefix = "security.authentication.jwt")
 @Data
