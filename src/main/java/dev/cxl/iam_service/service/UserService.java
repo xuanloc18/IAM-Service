@@ -9,12 +9,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
+
 import dev.cxl.iam_service.dto.request.*;
 import dev.cxl.iam_service.dto.response.UserResponse;
 import dev.cxl.iam_service.entity.HistoryActivity;
@@ -96,6 +99,12 @@ public class UserService {
                 .build());
 
         return userMapper.toUserResponse(userRespository.save(user));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<UserResponse> getAllUsers() {
+        List<User> userList = userRespository.findAll();
+        return userList.stream().map(user -> userMapper.toUserResponse(user)).toList();
     }
 
     public UserResponse updareUser(UserUpdateRequest request) {

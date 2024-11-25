@@ -1,7 +1,5 @@
 package dev.cxl.iam_service.configuration;
 
-import javax.crypto.spec.SecretKeySpec;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -13,9 +11,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -23,8 +20,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfig {
     private final String[] PUBLIC_ENPOINTS = {
-        "/users", "/auth/login", "/auth/introspect", "/auth/logout", "/auth/refresh"
+        "/users", "/auth/tfa-first", "/auth/tfa-two", "/auth/introspect", "/auth/logout", "/auth/refresh"
     };
+    private final String[] PRIVATE_ENPOINTS = {"/permissions", "/roles"};
 
     @Value("${jwt.signerKey}")
     private String signerKey;
@@ -37,12 +35,16 @@ public class SecurityConfig {
         httpSecurity.authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, PUBLIC_ENPOINTS)
                 .permitAll()
                 .requestMatchers(HttpMethod.GET, "/users")
-                .hasAuthority("SCOPE_ADMIN") // là admin mới cho vào
+                .hasRole("ADMIN")
+                .requestMatchers(PRIVATE_ENPOINTS)
+                .hasRole("ADMIN")
                 .anyRequest()
                 .permitAll());
 
         httpSecurity.oauth2ResourceServer(
-                oauth -> oauth.jwt(jwtConfigurer -> jwtConfigurer.decoder(customJWTDecoder))
+                oauth -> oauth.jwt(jwtConfigurer -> jwtConfigurer
+                                .decoder(customJWTDecoder)
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
                         .authenticationEntryPoint(
                                 new JwtAuthenticationEntryPoint()) // authenticationEntryPoint để bắt các lỗi chưa xác
                 // thực
@@ -52,11 +54,13 @@ public class SecurityConfig {
     }
 
     @Bean
-    JwtDecoder jwtDecoder() {
-        SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), "HS512"); // private key
-        return NimbusJwtDecoder.withSecretKey(secretKeySpec)
-                .macAlgorithm(MacAlgorithm.HS512)
-                .build();
+    JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter jwtGrantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
+        jwtGrantedAuthoritiesConverter.setAuthorityPrefix("ROLE_");
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
+
+        return jwtAuthenticationConverter;
     }
 
     @Bean

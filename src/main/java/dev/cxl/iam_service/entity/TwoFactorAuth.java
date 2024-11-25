@@ -20,6 +20,7 @@ public class TwoFactorAuth {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String id;
+
     String userId;
     String userMail;
     String otp;

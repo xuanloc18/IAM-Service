@@ -1,7 +1,5 @@
 package dev.cxl.iam_service.exception;
 
-import java.util.Map;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -14,7 +12,14 @@ import lombok.extern.log4j.Log4j2;
 @ControllerAdvice
 public class GobalExceptionHander {
 
-    private static final String MIN_ATRIBUTE = "min";
+    @ExceptionHandler(value = Exception.class)
+    ResponseEntity<APIResponse> handlingRuntimeException(RuntimeException exception) {
+        log.error("Exception: ", exception);
+        APIResponse apiResponse = new APIResponse();
+        apiResponse.setCode(ErrorCode.UNCATEGORIZED_EXCEPTION.getCode());
+        apiResponse.setMesage(ErrorCode.UNCATEGORIZED_EXCEPTION.getMessage());
+        return ResponseEntity.badRequest().body(apiResponse);
+    }
 
     @ExceptionHandler(value = AppException.class)
     ResponseEntity<APIResponse> handlingRuntimeException(AppException exception) {
@@ -33,10 +38,5 @@ public class GobalExceptionHander {
                         .code(errorCode.getCode())
                         .mesage(errorCode.getMessage())
                         .build());
-    }
-
-    private String mapAtribute(String message, Map<String, Object> atribute) {
-        String minvalue = String.valueOf(atribute.get(MIN_ATRIBUTE));
-        return message.replace("{" + MIN_ATRIBUTE + "}", minvalue);
     }
 }

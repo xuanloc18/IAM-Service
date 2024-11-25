@@ -20,6 +20,7 @@ public class HistoryActivity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String activityId;
+
     String userID;
     String activityType;
     String activityName;

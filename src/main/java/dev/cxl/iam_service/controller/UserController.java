@@ -1,5 +1,7 @@
 package dev.cxl.iam_service.controller;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,13 @@ import dev.cxl.iam_service.service.UserService;
 public class UserController {
     @Autowired
     private UserService userService;
+
+    @GetMapping
+    APIResponse<List<UserResponse>> getAllUser() {
+        return APIResponse.<List<UserResponse>>builder()
+                .result(userService.getAllUsers())
+                .build();
+    }
 
     @PostMapping
     APIResponse<String> createUser(@RequestBody @Valid UserCreationRequest request) {

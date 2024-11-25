@@ -120,8 +120,8 @@ public class AuthenticationService {
     }
 
     public String generrateToken(String mail) {
-        User user = (userRespository.findByUserMail(mail))
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User user =
+                (userRespository.findByUserMail(mail)).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         JWSHeader header = new JWSHeader(JWSAlgorithm.RS256);
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getUserID().toString())
@@ -214,7 +214,7 @@ public class AuthenticationService {
                 InvalidateToken.builder().id(jit).expiryTime(expiryTime).build();
         invalidateTokenRepository.save(invalidateToken);
         var id = signJWT.getJWTClaimsSet().getSubject();
-        User user=userRespository.findById(id).orElseThrow(()->new AppException(ErrorCode.UNAUTHENTICATED));
+        User user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
         var token = generrateToken(user.getUserMail());
         return AuthenticationResponse.builder()
                 .token(token)
