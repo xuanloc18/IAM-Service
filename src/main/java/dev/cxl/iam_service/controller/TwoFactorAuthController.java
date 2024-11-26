@@ -1,5 +1,7 @@
 package dev.cxl.iam_service.controller;
 
+import java.text.ParseException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,7 +38,8 @@ public class TwoFactorAuthController {
     //
     //    }
     @PostMapping("/tfa-two")
-    APIResponse<AuthenticationResponse> authenticationResponseAPIResponse(@RequestBody AuthenticationRequestTwo two) {
+    APIResponse<AuthenticationResponse> authenticationResponseAPIResponse(@RequestBody AuthenticationRequestTwo two)
+            throws ParseException {
         var result = authenticationService.authenticate(two);
         return APIResponse.<AuthenticationResponse>builder().result(result).build();
     }

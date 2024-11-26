@@ -34,10 +34,7 @@ import dev.cxl.iam_service.entity.*;
 import dev.cxl.iam_service.enums.UserAction;
 import dev.cxl.iam_service.exception.AppException;
 import dev.cxl.iam_service.exception.ErrorCode;
-import dev.cxl.iam_service.respository.InvalidateTokenRepository;
-import dev.cxl.iam_service.respository.PermissionRespository;
-import dev.cxl.iam_service.respository.RoleRepository;
-import dev.cxl.iam_service.respository.UserRespository;
+import dev.cxl.iam_service.respository.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -84,18 +81,22 @@ public class AuthenticationService {
     @Autowired
     private TwoFactorAuthService twoFactorAuthService;
 
+    @Autowired
+    private RefreshTokenRepository refreshTokenRepository;
+
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         var token = request.getToken();
         boolean valid = true;
         try {
-            verifyToken(token, false);
+            verifyToken(token);
         } catch (AppException appException) {
             valid = false;
         }
         return IntrospectResponse.builder().valid(valid).build();
     }
 
-    public AuthenticationResponse authenticate(AuthenticationRequestTwo authenticationRequestTwo) {
+    public AuthenticationResponse authenticate(AuthenticationRequestTwo authenticationRequestTwo)
+            throws ParseException {
         User user = userRespository
                 .findByUserMail(authenticationRequestTwo.getUserMail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
@@ -103,18 +104,13 @@ public class AuthenticationService {
         if (!check) {
             throw new AppException(ErrorCode.INVALID_OTP);
         }
-        // Save history activity
-        activityService.createHistoryActivity(HistoryActivity.builder()
-                .activityType(UserAction.LOGIN.name())
-                .activityName(UserAction.LOGIN.getDescription())
-                .userID(user.getUserID())
-                .activityStart(LocalDateTime.now())
-                .browserID(httpServletRequest.getRemoteAddr())
-                .build());
-
         var token = generrateToken(authenticationRequestTwo.getUserMail());
+        SignedJWT signedJWT = SignedJWT.parse(token);
+        String id = signedJWT.getJWTClaimsSet().getSubject();
+        Date exDate = signedJWT.getJWTClaimsSet().getExpirationTime();
         return AuthenticationResponse.builder()
                 .token(token)
+                .refreshToken(generrateRefreshToken(authenticationRequestTwo.getUserMail(), id, exDate))
                 .authentication(true)
                 .build();
     }
@@ -144,6 +140,34 @@ public class AuthenticationService {
         }
     }
 
+    public String generrateRefreshToken(String mail, String accessTokenID, Date date) {
+        User user =
+                (userRespository.findByUserMail(mail)).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        JWSHeader header = new JWSHeader(JWSAlgorithm.RS256);
+        JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
+                .subject(user.getUserID().toString())
+                .issueTime(new Date())
+                .expirationTime(new Date(Instant.now()
+                        .plus(REFESHABLE_DURATION, ChronoUnit.SECONDS)
+                        .toEpochMilli()))
+                .jwtID(UUID.randomUUID().toString())
+                .build();
+        Payload payload = new Payload(jwtClaimsSet.toJSONObject());
+        JWSObject jwsObject = new JWSObject(header, payload);
+        try {
+            jwsObject.sign(new RSASSASigner(keyProvider.getKeyPair().getPrivate()));
+            refreshTokenRepository.save(RefreshToken.builder()
+                    .refreshToken(jwsObject.serialize())
+                    .expiresAccessToken(date)
+                    .accessTokenID(accessTokenID)
+                    .build());
+            return jwsObject.serialize();
+        } catch (JOSEException e) {
+            log.error("can not create access token", e);
+            throw new RuntimeException(e);
+        }
+    }
+
     private String buildScrope(User user) {
         StringJoiner stringJoiner = new StringJoiner(" "); // các phần tử cách nhau bới " "
         if (!CollectionUtils.isEmpty(user.getRoles())) {
@@ -159,18 +183,11 @@ public class AuthenticationService {
         return stringJoiner.toString();
     }
 
-    private SignedJWT verifyToken(String token, boolean isRefresh) throws ParseException, JOSEException {
+    private SignedJWT verifyToken(String token) throws ParseException, JOSEException {
         SignedJWT signedJWT = SignedJWT.parse(token);
         RSASSAVerifier rsassaVerifier =
                 new RSASSAVerifier((RSAPublicKey) keyProvider.getKeyPair().getPublic());
-        Date expiryTime = (isRefresh)
-                ? new Date(signedJWT
-                        .getJWTClaimsSet()
-                        .getIssueTime()
-                        .toInstant()
-                        .plus(REFESHABLE_DURATION, ChronoUnit.SECONDS)
-                        .toEpochMilli())
-                : signedJWT.getJWTClaimsSet().getExpirationTime();
+        Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
 
         boolean veri = signedJWT.verify(rsassaVerifier);
         if (!(veri && expiryTime.after(new Date()))) {
@@ -184,10 +201,11 @@ public class AuthenticationService {
 
     public void logout(LogoutRequest request) throws ParseException, JOSEException {
         try {
-            var signToken = verifyToken(request.getToken(), true);
+            var signToken = verifyToken(request.getToken());
             String jit = signToken.getJWTClaimsSet().getJWTID();
             Date expiry = signToken.getJWTClaimsSet().getExpirationTime();
             String userId = signToken.getJWTClaimsSet().getSubject();
+            refreshTokenRepository.deleteByAccessTokenID(jit);
 
             // Save history activity
             activityService.createHistoryActivity(HistoryActivity.builder()
@@ -206,18 +224,31 @@ public class AuthenticationService {
         }
     }
 
-    public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
-        var signJWT = verifyToken(request.getToken(), true);
-        var jit = signJWT.getJWTClaimsSet().getJWTID();
-        var expiryTime = signJWT.getJWTClaimsSet().getExpirationTime();
-        InvalidateToken invalidateToken =
-                InvalidateToken.builder().id(jit).expiryTime(expiryTime).build();
+    public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException {
+        SignedJWT signedJWT = SignedJWT.parse(request.getRefreshToken());
+        RefreshToken refreshToken = refreshTokenRepository
+                .findRefreshTokenByRefreshToken(request.getRefreshToken())
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
+        Boolean checkTime =
+                signedJWT.getJWTClaimsSet().getExpirationTime().toInstant().isAfter(Instant.now());
+        if (!checkTime) throw new AppException(ErrorCode.UNAUTHENTICATED);
+        InvalidateToken invalidateToken = InvalidateToken.builder()
+                .id(refreshToken.getAccessTokenID())
+                .expiryTime(refreshToken.getExpiresAccessToken())
+                .build();
         invalidateTokenRepository.save(invalidateToken);
-        var id = signJWT.getJWTClaimsSet().getSubject();
-        User user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
+        refreshTokenRepository.deleteByAccessTokenID(invalidateToken.getId());
+        var userID = signedJWT.getJWTClaimsSet().getSubject();
+        User user = userRespository.findById(userID).orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
         var token = generrateToken(user.getUserMail());
+        SignedJWT signedJWT1 = SignedJWT.parse(token);
+        var refeshToken = generrateRefreshToken(
+                user.getUserMail(),
+                signedJWT1.getJWTClaimsSet().getJWTID(),
+                signedJWT1.getJWTClaimsSet().getExpirationTime());
         return AuthenticationResponse.builder()
                 .token(token)
+                .refreshToken(refeshToken)
                 .authentication(true)
                 .build();
     }
