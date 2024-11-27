@@ -46,5 +46,13 @@ jwt:
   valid-duration: 3600 #in second
   refreshable-duration: 360000 #insecond
 
+idp:
+  url: http://localhost:8080
+  client-id: iam-service
+  client-secret: EEQnppsmXZDGIVhYOqJTGfiT47yY60qC
+
+feign:
+  hystrix:
+    enabled: true
 
 

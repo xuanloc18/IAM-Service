@@ -1,6 +1,9 @@
 package dev.cxl.iam_service.controller;
 
+import java.io.IOException;
 import java.text.ParseException;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -28,12 +31,17 @@ public class AuthenticationController {
     @Autowired
     UserService userService;
 
-    //    @PostMapping("/login")
-    //    APIResponse<AuthenticationResponse> authenticationResponseAPIResponse(@RequestBody AuthenticationRequest
-    // request) {
-    //        var result = authenticationService.authenticate(request);
-    //        return APIResponse.<AuthenticationResponse>builder().result(result).build();
-    //    }
+    @GetMapping("/login")
+    public void login(HttpServletResponse response) throws IOException {
+        String keycloakLoginUrl =
+                "http://localhost:8080/realms/CXL/protocol/openid-connect/auth?client_id=security-admin" +
+                        "-console&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Fadmin%2FCXL%2Fconsole%2F" +
+                        "&state=235933d8-3e44-45df-bc88-7746d12e9cee&response_mode=query&response_type=" +
+                        "code&scope=openid&nonce=17885cb2-95ef-40cd-97f0-640bf04a4651&code_challenge=e0" +
+                        "5dcA9mJ1ABqUYz7N3EmYwrIOQ-N5RMlpyCBJe_SzQ&code_challenge_method=S256";
+
+        response.sendRedirect(keycloakLoginUrl); // Chuyển hướng trình duyệt tới URL Keycloak
+    }
 
     @PostMapping("/introspect")
     APIResponse<IntrospectResponse> authenticationResponseAPIResponse(@RequestBody IntrospectRequest request)

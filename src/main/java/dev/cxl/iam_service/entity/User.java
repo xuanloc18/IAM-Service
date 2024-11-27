@@ -20,6 +20,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     String userID;
 
+    String userKCLID;
     String userMail;
     String passWord;
     String firstName;

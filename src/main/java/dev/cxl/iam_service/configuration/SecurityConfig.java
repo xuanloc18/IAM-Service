@@ -19,7 +19,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfig {
     private final String[] PUBLIC_ENPOINTS = {
-        "/users", "/auth/tfa-first", "/auth/tfa-two", "/auth/introspect", "/auth/logout", "/auth/refresh"
+        "/users", "/auth/tfa-first", "/auth/tfa-two", "/auth/introspect", "/auth/logout", "/auth/refresh","/kcl/logout"
     };
     private final String[] PRIVATE_ENPOINTS = {"/permissions", "/roles"};
 
@@ -37,14 +37,14 @@ public class SecurityConfig {
                 .anyRequest()
                 .permitAll());
 
-        httpSecurity.oauth2ResourceServer(
-                oauth -> oauth.jwt(jwtConfigurer -> jwtConfigurer
-                                .decoder(customJWTDecoder)
-                                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                        .authenticationEntryPoint(
-                                new JwtAuthenticationEntryPoint()) // authenticationEntryPoint để bắt các lỗi chưa xác
-                // thực
-                );
+//        httpSecurity.oauth2ResourceServer(
+//                oauth -> oauth.jwt(jwtConfigurer -> jwtConfigurer
+//                                .decoder(customJWTDecoder)
+//                                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+//                        .authenticationEntryPoint(
+//                                new JwtAuthenticationEntryPoint()) // authenticationEntryPoint để bắt các lỗi chưa xác
+//                // thực
+//                );
         httpSecurity.csrf(AbstractHttpConfigurer::disable); // tắt csrf để có thể sủ dụng authorizeHttpRequests
         return httpSecurity.build();
     }

@@ -31,7 +31,7 @@ public class UserController {
     APIResponse<String> createUser(@RequestBody @Valid UserCreationRequest request) {
         userService.createUser(request);
         return APIResponse.<String>builder()
-                .result("Mời bạn vào email xác thực đăng kí")
+                .result("")
                 .build();
     }
 
