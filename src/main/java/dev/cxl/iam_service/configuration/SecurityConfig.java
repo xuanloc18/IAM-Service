@@ -1,9 +1,11 @@
 package dev.cxl.iam_service.configuration;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -22,29 +24,36 @@ public class SecurityConfig {
         "/users", "/auth/tfa-first", "/auth/tfa-two", "/auth/introspect", "/auth/logout", "/auth/refresh","/kcl/logout"
     };
     private final String[] PRIVATE_ENPOINTS = {"/permissions", "/roles"};
+    @Value("${idp.enable}")
+    Boolean idpEnable;
 
-    @Autowired
-    private CustomJWTDecoder customJWTDecoder;
+    @Autowired(required = false)
+//@Autowired
+    CustomJWTDecoder jwtDecoder;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, PUBLIC_ENPOINTS)
                 .permitAll()
-                .requestMatchers(HttpMethod.GET, "/users")
-                .hasRole("ADMIN")
-                .requestMatchers(PRIVATE_ENPOINTS)
-                .hasRole("ADMIN")
+//                .requestMatchers(HttpMethod.GET, "/users")
+//                .hasRole("ADMIN")
+//                .requestMatchers(PRIVATE_ENPOINTS)
+//                .hasRole("ADMIN")
                 .anyRequest()
                 .permitAll());
-
-//        httpSecurity.oauth2ResourceServer(
-//                oauth -> oauth.jwt(jwtConfigurer -> jwtConfigurer
-//                                .decoder(customJWTDecoder)
-//                                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-//                        .authenticationEntryPoint(
-//                                new JwtAuthenticationEntryPoint()) // authenticationEntryPoint để bắt các lỗi chưa xác
-//                // thực
-//                );
+        if(idpEnable) {
+            httpSecurity.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+        }
+        else {
+            httpSecurity.oauth2ResourceServer(
+                    oauth -> oauth.jwt(jwtConfigurer -> jwtConfigurer
+                                    .decoder(jwtDecoder)
+                                    .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                            .authenticationEntryPoint(
+                                    new JwtAuthenticationEntryPoint()) // authenticationEntryPoint để bắt các lỗi chưa xác
+                    // thực
+            );
+        }
         httpSecurity.csrf(AbstractHttpConfigurer::disable); // tắt csrf để có thể sủ dụng authorizeHttpRequests
         return httpSecurity.build();
     }

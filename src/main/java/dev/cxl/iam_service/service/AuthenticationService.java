@@ -1,5 +1,6 @@
 package dev.cxl.iam_service.service;
 
+import java.security.KeyPair;
 import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.time.Instant;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.UUID;
 
+import dev.cxl.iam_service.dto.identity.TokenExchangeResponseUser;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
@@ -17,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.crypto.encrypt.KeyStoreKeyFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -183,7 +187,7 @@ public class AuthenticationService {
         return stringJoiner.toString();
     }
 
-    private SignedJWT verifyToken(String token) throws ParseException, JOSEException {
+    public SignedJWT verifyToken(String token) throws ParseException, JOSEException {
         SignedJWT signedJWT = SignedJWT.parse(token);
         RSASSAVerifier rsassaVerifier =
                 new RSASSAVerifier((RSAPublicKey) keyProvider.getKeyPair().getPublic());
@@ -224,10 +228,10 @@ public class AuthenticationService {
         }
     }
 
-    public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException {
-        SignedJWT signedJWT = SignedJWT.parse(request.getRefreshToken());
+    public TokenExchangeResponseUser refreshToken(String refreshTokenn) throws ParseException {
+        SignedJWT signedJWT = SignedJWT.parse(refreshTokenn);
         RefreshToken refreshToken = refreshTokenRepository
-                .findRefreshTokenByRefreshToken(request.getRefreshToken())
+                .findRefreshTokenByRefreshToken(refreshTokenn)
                 .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
         Boolean checkTime =
                 signedJWT.getJWTClaimsSet().getExpirationTime().toInstant().isAfter(Instant.now());
@@ -246,10 +250,11 @@ public class AuthenticationService {
                 user.getUserMail(),
                 signedJWT1.getJWTClaimsSet().getJWTID(),
                 signedJWT1.getJWTClaimsSet().getExpirationTime());
-        return AuthenticationResponse.builder()
-                .token(token)
+        return TokenExchangeResponseUser.builder()
+                .accessToken(token)
                 .refreshToken(refeshToken)
-                .authentication(true)
                 .build();
     }
+
+
 }

@@ -5,6 +5,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
@@ -17,6 +18,7 @@ import dev.cxl.iam_service.dto.request.IntrospectRequest;
 import dev.cxl.iam_service.service.AuthenticationService;
 import dev.cxl.iam_service.service.KeyProvider;
 
+@ConditionalOnProperty(name = "idp.enable", havingValue = "false")
 @Component
 public class CustomJWTDecoder implements JwtDecoder {
     @Autowired

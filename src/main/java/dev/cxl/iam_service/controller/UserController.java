@@ -2,9 +2,12 @@ package dev.cxl.iam_service.controller;
 
 import java.util.List;
 
+import dev.cxl.iam_service.configuration.idpConfig;
+import dev.cxl.iam_service.service.auth.IAuthService;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 
 import dev.cxl.iam_service.dto.request.APIResponse;
@@ -20,6 +23,11 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+
+    @Autowired
+    idpConfig iidpConfig;
+
+
     @GetMapping
     APIResponse<List<UserResponse>> getAllUser() {
         return APIResponse.<List<UserResponse>>builder()
@@ -29,7 +37,7 @@ public class UserController {
 
     @PostMapping
     APIResponse<String> createUser(@RequestBody @Valid UserCreationRequest request) {
-        userService.createUser(request);
+        iidpConfig.getAuthService().register(request);
         return APIResponse.<String>builder()
                 .result("")
                 .build();

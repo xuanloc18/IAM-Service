@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.nimbusds.jwt.SignedJWT;
 import dev.cxl.iam_service.dto.identity.*;
+import dev.cxl.iam_service.dto.request.AuthenticationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,6 +70,17 @@ public class UserKCLService {
                 .build());
     }
 
+    public TokenExchangeResponseUser tokenExchangeResponseUser(AuthenticationRequest authenticationRequest) {
+        return indentityClient.exchangTokenUser(TokenExchangeParamUser.builder()
+                .grant_type("password")
+                .client_id(idpClientId)
+                .client_secret(idpClientSecret)
+                .username(authenticationRequest.getUserMail())
+                 .password(authenticationRequest.getPassWord())
+                .scope("openid")
+                .build());
+    }
+
     public  void logOut(String token,String refreshToken)  {
       token="Bearer"+ token;
         Logout logout=Logout.builder()
@@ -77,5 +89,14 @@ public class UserKCLService {
                 .client_secret(idpClientSecret)
                 .build();
         indentityClient.logoutUser(token,logout);
+    }
+    public  TokenExchangeResponseUser refreshToken (String refreshToken) {
+        TokenExchangeRefresh build = TokenExchangeRefresh.builder()
+                .grant_type("refresh_token")
+                .refresh_token(refreshToken)
+                .client_id(idpClientId)
+                .client_secret(idpClientSecret)
+                .build();
+        return indentityClient.refrehToken(build);
     }
 }

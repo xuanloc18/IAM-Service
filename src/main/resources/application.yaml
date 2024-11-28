@@ -16,7 +16,11 @@ spring:
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
-
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/CXL
   jpa:
     hibernate:
 #      ddl-auto: update
@@ -28,6 +32,7 @@ security:
       key-store : keystore.jks
       key-store-password: cxlcxl
       key-alias: viz
+
 keycloak:
   auth-server-url: http://localhost:8080/auth  # URL của Keycloak Server
   realm: CXL  # Tên Realm trong Keycloak
@@ -50,6 +55,7 @@ idp:
   url: http://localhost:8080
   client-id: iam-service
   client-secret: EEQnppsmXZDGIVhYOqJTGfiT47yY60qC
+  enable: true
 
 feign:
   hystrix:
