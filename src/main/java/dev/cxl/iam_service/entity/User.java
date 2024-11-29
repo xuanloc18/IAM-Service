@@ -15,12 +15,13 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "users")
-public class User {
+public class User extends AuditableEntity{
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     String userID;
 
     String userKCLID;
+    String userName;
     String userMail;
     String passWord;
     String firstName;
@@ -28,5 +29,6 @@ public class User {
     LocalDate dateOfBirth;
     String avatar;
     Boolean enabled;
+    Boolean deleted;
     Set<String> roles;
 }

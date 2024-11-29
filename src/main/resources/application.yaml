@@ -23,7 +23,7 @@ spring:
           issuer-uri: http://localhost:8080/realms/CXL
   jpa:
     hibernate:
-#      ddl-auto: update
+      ddl-auto: update
       dialect: org.hibernate.dialect.PostgreSQLDialect  # Chỉ định Dialect cho PostgreSQL
     show-sql: true
 security:

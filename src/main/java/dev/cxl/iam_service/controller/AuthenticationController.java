@@ -53,7 +53,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/logout")
-    APIResponse<Void> logout(@RequestHeader("authorization") String token, @PathParam("refreshToken")String refreshToken){
+    APIResponse<Void> logout(@RequestHeader("authorization") String token, @PathParam("refreshToken")String refreshToken) throws ParseException, JOSEException {
         idpConfig.getAuthService().logout(token,refreshToken);
         return APIResponse.<Void>builder().build();
     }

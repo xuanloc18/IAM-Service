@@ -14,11 +14,11 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserCreationRequest {
 
+    String userName;
     String userMail;
 
     @Size(min = 8, message = "PASSWORD_EXCEPION")
     String passWord;
-
     String firstName;
     String lastName;
     LocalDate dateOfBirth;

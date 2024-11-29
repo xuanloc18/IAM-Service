@@ -6,6 +6,8 @@ import java.util.List;
 import com.nimbusds.jwt.SignedJWT;
 import dev.cxl.iam_service.dto.identity.*;
 import dev.cxl.iam_service.dto.request.AuthenticationRequest;
+import dev.cxl.iam_service.dto.request.ResetPassword;
+import dev.cxl.iam_service.dto.request.UserUpdateRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import dev.cxl.iam_service.dto.request.UserCreationRequest;
 import dev.cxl.iam_service.respository.IndentityClient;
 import lombok.experimental.NonFinal;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Service
 public class UserKCLService {
@@ -38,7 +41,7 @@ public class UserKCLService {
         var creationResponse = indentityClient.createUser(
                 "Bearer " + tokenExchangeResponse().getAccessToken(),
                 UserCreationParam.builder()
-                        .username(request.getFirstName())
+                        .username(request.getUserName())
                         .firstName(request.getFirstName())
                         .lastName(request.getLastName())
                         .email(request.getUserMail())
@@ -99,4 +102,14 @@ public class UserKCLService {
                 .build();
         return indentityClient.refrehToken(build);
     }
+    public  void  enableUser(String token, String id, UserUpdateRequest request){
+        token="Bearer "+ token;
+        indentityClient.enableUser(token,id,request);
+    }
+    public Boolean resetPassWord(String token, String id, ResetPassword request){
+        token="Bearer "+ tokenExchangeResponse().getAccessToken().toString();
+        indentityClient.resetPassWord(token,id,request);
+        return true;
+    }
+
 }

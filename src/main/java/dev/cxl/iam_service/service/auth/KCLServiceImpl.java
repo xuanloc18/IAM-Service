@@ -2,39 +2,31 @@ package dev.cxl.iam_service.service.auth;
 
 import dev.cxl.iam_service.dto.identity.TokenExchangeResponseUser;
 import dev.cxl.iam_service.dto.request.AuthenticationRequest;
+import dev.cxl.iam_service.dto.request.ResetPassword;
 import dev.cxl.iam_service.dto.request.UserCreationRequest;
+import dev.cxl.iam_service.dto.request.UserUpdateRequest;
 import dev.cxl.iam_service.entity.User;
 import dev.cxl.iam_service.exception.AppException;
 import dev.cxl.iam_service.exception.ErrorCode;
-import dev.cxl.iam_service.mapper.UserMapper;
-import dev.cxl.iam_service.respository.InvalidateTokenRepository;
 import dev.cxl.iam_service.respository.UserRespository;
 import dev.cxl.iam_service.service.*;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
-import java.util.HashSet;
+import java.text.ParseException;
 
 @Service
 public class KCLServiceImpl implements IAuthService{
     @Autowired
-    private UserRespository userRespository;
-
-    @Autowired
-    private UserMapper userMapper;
-
-    @Autowired
-    PasswordEncoder passwordEncoder;
-
-
-    @Autowired
-    TwoFactorAuthService twoFactorAuthService;
+    UserService userService;
 
     @Autowired
     UserKCLService userKCLService;
+    @Autowired
+    private UserRespository userRespository;
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
 
 
@@ -52,18 +44,7 @@ public class KCLServiceImpl implements IAuthService{
 
     @Override
     public boolean register(UserCreationRequest request) {
-        if (userRespository.existsByUserMail(request.getUserMail())) {
-            throw new AppException(ErrorCode.USER_EXISTED);
-        }
-        User user = userMapper.toUser(request);
-        user.setUserKCLID(userKCLService.createUserKCL(request));
-        user.setEnabled(false);
-        user.setPassWord(passwordEncoder.encode(request.getPassWord()));
-        HashSet<String> roles = new HashSet<>();
-        if (CollectionUtils.isEmpty(user.getRoles())) roles.add("USER");
-        user.setRoles(roles);
-        twoFactorAuthService.sendCreatUser(user.getUserMail());
-        userMapper.toUserResponse(userRespository.save(user));
+        userService.createUser(request);
         return true;
     }
 
@@ -71,5 +52,28 @@ public class KCLServiceImpl implements IAuthService{
     public TokenExchangeResponseUser getRefreshToken(String refreshToken) {
          return userKCLService.refreshToken(refreshToken);
 
+    }
+
+    @Override
+    public Boolean enableUser(String token, String id, UserUpdateRequest request) throws ParseException {
+        User user = userRespository.findByUserKCLID(id).orElseThrow(()->new AppException(ErrorCode.USER_NOT_EXISTED));
+        user.setEnabled(request.getEnabled());
+        userRespository.save(user);
+        userKCLService.enableUser(userKCLService.tokenExchangeResponse().getAccessToken(), id, request);
+        return null;
+    }
+
+    @Override
+    public Boolean deleteSoft(String id, UserUpdateRequest request) {
+        return null;
+    }
+
+    @Override
+    public Boolean resetPassword(String token, String id, ResetPassword resetPassword) throws ParseException {
+        userKCLService.resetPassWord(userKCLService.tokenExchangeResponse().getAccessToken(), id, resetPassword);
+        User user =userRespository.findByUserKCLID(id).orElseThrow(()->new AppException(ErrorCode.USER_NOT_EXISTED));
+        user.setPassWord(passwordEncoder.encode(resetPassword.getValue()));
+        userRespository.save(user);
+        return null;
     }
 }

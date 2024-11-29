@@ -9,7 +9,9 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PermissionResponse {
-
+    String id;
+    Boolean deleted;
     String name;
-    String description;
+    String resource_code;
+    String scope;
 }

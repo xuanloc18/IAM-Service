@@ -20,21 +20,24 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-    private final String[] PUBLIC_ENPOINTS = {
-        "/users", "/auth/tfa-first", "/auth/tfa-two", "/auth/introspect", "/auth/logout", "/auth/refresh","/kcl/logout"
+    private final String[] PUBLIC_ENPOINTS_POST = {
+        "/users", "/auth/tfa-first", "/auth/tfa-two", "/auth/introspect", "/auth/logout", "/auth/refresh","/kcl/logout","/auth/login"
+    };
+    private final String[] PUBLIC_ENPOINTS_GET = {
+            "/users", "/auth/tfa-first", "/auth/tfa-two", "/auth/introspect", "/auth/logout", "/auth/refresh","/kcl/logout","/auth/login"
     };
     private final String[] PRIVATE_ENPOINTS = {"/permissions", "/roles"};
     @Value("${idp.enable}")
     Boolean idpEnable;
 
     @Autowired(required = false)
-//@Autowired
     CustomJWTDecoder jwtDecoder;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, PUBLIC_ENPOINTS)
+        httpSecurity.authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, PUBLIC_ENPOINTS_POST)
                 .permitAll()
+                .requestMatchers(HttpMethod.GET,PUBLIC_ENPOINTS_GET).permitAll()
 //                .requestMatchers(HttpMethod.GET, "/users")
 //                .hasRole("ADMIN")
 //                .requestMatchers(PRIVATE_ENPOINTS)

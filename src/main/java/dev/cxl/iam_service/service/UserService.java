@@ -1,15 +1,20 @@
 package dev.cxl.iam_service.service;
 
+import org.springframework.data.domain.Pageable; // Đúng
+
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import dev.cxl.iam_service.dto.response.PageResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -67,6 +72,9 @@ public class UserService {
     @Autowired
     UserKCLService userKCLService;
 
+    @Value("${idp.enable}")
+    Boolean idpEnable;
+
     public UserResponse createUser(UserCreationRequest request) {
         if (userRespository.existsByUserMail(request.getUserMail())) {
             throw new AppException(ErrorCode.USER_EXISTED);
@@ -75,9 +83,9 @@ public class UserService {
         user.setUserKCLID(userKCLService.createUserKCL(request));
         user.setEnabled(false);
         user.setPassWord(passwordEncoder.encode(request.getPassWord()));
-        HashSet<String> roles = new HashSet<>();
-        if (CollectionUtils.isEmpty(user.getRoles())) roles.add("USER");
-        user.setRoles(roles);
+//        HashSet<String> roles = new HashSet<>();
+//        if (CollectionUtils.isEmpty(user.getRoles())) roles.add("USER");
+//        user.setRoles(roles);
         twoFactorAuthService.sendCreatUser(user.getUserMail());
         return userMapper.toUserResponse(userRespository.save(user));
     }
@@ -104,10 +112,18 @@ public class UserService {
         return userMapper.toUserResponse(userRespository.save(user));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
-    public List<UserResponse> getAllUsers() {
-        List<User> userList = userRespository.findAll();
-        return userList.stream().map(user -> userMapper.toUserResponse(user)).toList();
+//    @PreAuthorize("hasRole('ADMIN')")
+    public PageResponse<UserResponse> getAllUsers(int page, int size) {
+        Sort sort=Sort.by( "userID").descending();
+        Pageable pageable= PageRequest.of(page-1,size,sort);
+        var pageData=userRespository.findAll(pageable);
+        return PageResponse.<UserResponse>builder()
+                .currentPage(page)
+                .pageSize(pageData.getSize())
+                .totalPages(pageData.getTotalPages())
+                .totalElements(pageData.getTotalElements())
+                .data(pageData.getContent().stream().map(user -> userMapper.toUserResponse(user)).toList())
+                .build();
     }
 
     public UserResponse updareUser(UserUpdateRequest request) {
@@ -130,7 +146,25 @@ public class UserService {
     public UserResponse getMyInfor() {
         var context = SecurityContextHolder.getContext();
         String id = context.getAuthentication().getName();
-        User user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User user ;
+        if(idpEnable){
+            user = userRespository.findByUserKCLID(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        }
+        else {
+            user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        }
+
+        return userMapper.toUserResponse(user);
+    }
+    public UserResponse getInfor(String id) {
+        User user;
+        if(idpEnable){
+            user = userRespository.findByUserKCLID(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        }
+        else {
+            user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        }
+
         return userMapper.toUserResponse(user);
     }
 

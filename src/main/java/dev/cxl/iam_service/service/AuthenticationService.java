@@ -203,9 +203,10 @@ public class AuthenticationService {
         return signedJWT;
     }
 
-    public void logout(LogoutRequest request) throws ParseException, JOSEException {
+    public void logout(String accessToken, String refreshToken) throws ParseException, JOSEException {
         try {
-            var signToken = verifyToken(request.getToken());
+            accessToken=accessToken.replace("Bearer ", "");
+            var signToken = verifyToken(accessToken);
             String jit = signToken.getJWTClaimsSet().getJWTID();
             Date expiry = signToken.getJWTClaimsSet().getExpirationTime();
             String userId = signToken.getJWTClaimsSet().getSubject();
@@ -224,8 +225,12 @@ public class AuthenticationService {
                     InvalidateToken.builder().id(jit).expiryTime(expiry).build();
             invalidateTokenRepository.save(invalidateToken);
         } catch (AppException exception) {
-            log.warn("token already expired");
+        } catch (JOSEException e) {
+            throw new RuntimeException(e);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
         }
+
     }
 
     public TokenExchangeResponseUser refreshToken(String refreshTokenn) throws ParseException {

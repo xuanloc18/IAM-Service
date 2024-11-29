@@ -14,10 +14,14 @@ import lombok.experimental.FieldDefaults;
 public class UserResponse {
 
     String userID;
+    String userKCLID;
+    String userName;
     String userMail;
     String firstName;
     String lastName;
     LocalDate dateOfBirth;
+    Boolean enabled;
+    Boolean deleted;
     String avatar;
     Set<String> roles;
 }
