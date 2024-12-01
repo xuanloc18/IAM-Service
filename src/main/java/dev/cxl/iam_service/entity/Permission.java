@@ -22,7 +22,7 @@ public class Permission extends AuditableEntity {
     @Column(name = "deleted", nullable = false)
     Boolean deleted = false;
 
-    @Column(name = "name", nullable = false, unique = true, length = 50)
+    @Column(name = "name", nullable = false, unique = false, length = 50)
     String name;
 
     @Column(name = "resource_code", nullable = false, length = 50)

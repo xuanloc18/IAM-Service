@@ -2,6 +2,7 @@ package dev.cxl.iam_service.controller;
 
 import java.util.List;
 
+import dev.cxl.iam_service.dto.response.PageResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,9 +25,11 @@ public class RoleController {
     }
 
     @GetMapping
-    APIResponse<List<RoleResponse>> getAll() {
-        return APIResponse.<List<RoleResponse>>builder()
-                .result(roleService.getAll())
+    APIResponse<PageResponse<RoleResponse>> getAll(
+            @RequestParam(value = "page", required = false, defaultValue = "1") int page,
+            @RequestParam(value = "pagesize", required = false, defaultValue = "10") int size) {
+        return APIResponse.<PageResponse<RoleResponse>>builder()
+                .result(roleService.getAll(page,size))
                 .build();
     }
 

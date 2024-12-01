@@ -12,6 +12,6 @@ public class PermissionResponse {
     String id;
     Boolean deleted;
     String name;
-    String resource_code;
+    String resourceCode;
     String scope;
 }
