@@ -1,7 +1,6 @@
 package dev.cxl.iam_service.entity;
 
 import java.time.LocalDate;
-import java.util.Set;
 
 import jakarta.persistence.*;
 
@@ -14,21 +13,41 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "users")
-public class User extends AuditableEntity{
+@Table(name = "user_accounts") // Tên bảng đặt theo chuẩn số nhiều
+public class User extends AuditableEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "user_id") // Tên cột dạng snake_case
     String userID;
 
+    @Column(name = "user_kcl_id")
     String userKCLID;
+
+    @Column(name = "user_name")
     String userName;
+
+    @Column(name = "user_mail")
     String userMail;
+
+    @Column(name = "password")
     String passWord;
+
+    @Column(name = "first_name")
     String firstName;
+
+    @Column(name = "last_name")
     String lastName;
+
+    @Column(name = "date_of_birth")
     LocalDate dateOfBirth;
+
+    @Column(name = "avatar_url")
     String avatar;
+
+    @Column(name = "is_enabled")
     Boolean enabled;
-    Boolean deleted;
-    Set<String> roles;
+
+    @Column(name = "deleted")
+    Boolean deleted = false;
 }

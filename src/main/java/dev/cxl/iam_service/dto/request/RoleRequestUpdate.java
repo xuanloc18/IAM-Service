@@ -8,10 +8,11 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class PermissionRequest {
+public class RoleRequestUpdate {
 
-    Boolean deleted = false;
     String name;
-    String resourceCode;
-    String scope;
+    String code;
+    String description;
+    Boolean deleted;
+
 }

@@ -1,7 +1,6 @@
 package dev.cxl.iam_service.dto.response;
 
 import java.time.LocalDate;
-import java.util.Set;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -23,5 +22,4 @@ public class UserResponse {
     Boolean enabled;
     Boolean deleted;
     String avatar;
-    Set<String> roles;
 }

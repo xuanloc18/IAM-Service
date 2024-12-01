@@ -4,9 +4,12 @@ server:
     context-path: /iam
 spring:
   datasource:
-    url: "jdbc:postgresql://localhost:5432/iamservice"
-    username: postgres
-    password: "@Chuxuanloc26032003"
+#    url: "jdbc:postgresql://localhost:5432/iamservice"
+#    username: postgres
+#    password: "@Chuxuanloc26032003"
+    url: "jdbc:mysql://localhost:3306/iamservice"
+    username: root
+    password: 260303
   mail:
     host: "smtp.gmail.com"
     port: 587
@@ -24,7 +27,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-      dialect: org.hibernate.dialect.PostgreSQLDialect  # Chỉ định Dialect cho PostgreSQL
+#      dialect: org.hibernate.dialect.PostgreSQLDialect  # Chỉ định Dialect cho PostgreSQL
     show-sql: true
 security:
   authentication:
@@ -33,19 +36,19 @@ security:
       key-store-password: cxlcxl
       key-alias: viz
 
-keycloak:
-  auth-server-url: http://localhost:8080/auth  # URL của Keycloak Server
-  realm: CXL  # Tên Realm trong Keycloak
-  resource: iam-service  # Client ID trong Keycloak
-  credentials:
-    secret: EEQnppsmXZDGIVhYOqJTGfiT47yY60qC  # Client Secret của client trong Keycloak
-  bearer-only: true  # Chỉ cho phép Bearer Token trong ứng dụng
-  security-constraints:
-    - authRoles:
-        - user  # Các role người dùng cần có để truy cập API
-      securityCollections:
-        - patterns:
-            - /api/*  # Bảo vệ các API có pattern là /api/*
+#keycloak:
+#  auth-server-url: http://localhost:8080/auth  # URL của Keycloak Server
+#  realm: CXL  # Tên Realm trong Keycloak
+#  resource: iam-service  # Client ID trong Keycloak
+#  credentials:
+#    secret: EEQnppsmXZDGIVhYOqJTGfiT47yY60qC  # Client Secret của client trong Keycloak
+#  bearer-only: true  # Chỉ cho phép Bearer Token trong ứng dụng
+#  security-constraints:
+#    - authRoles:
+#        - user  # Các role người dùng cần có để truy cập API
+#      securityCollections:
+#        - patterns:
+#            - /api/*  # Bảo vệ các API có pattern là /api/*
 
 jwt:
   valid-duration: 3600 #in second
@@ -54,9 +57,10 @@ jwt:
 idp:
   url: http://localhost:8080
   client-id: iam-service
-  client-secret: EEQnppsmXZDGIVhYOqJTGfiT47yY60qC
-  enable: true
-
+#  client-secret: EEQnppsmXZDGIVhYOqJTGfiT47yY60qC
+  client-secret: avNbp3yTahdCDjX0cWZi79TnQZ4KXASQ
+  enable: false
+  realms: CXL
 feign:
   hystrix:
     enabled: true

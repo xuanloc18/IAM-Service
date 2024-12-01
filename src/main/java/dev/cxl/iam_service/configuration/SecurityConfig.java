@@ -21,12 +21,27 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfig {
     private final String[] PUBLIC_ENPOINTS_POST = {
-        "/users", "/auth/tfa-first", "/auth/tfa-two", "/auth/introspect", "/auth/logout", "/auth/refresh","/kcl/logout","/auth/login"
+        "/users",
+        "/auth/tfa-first",
+        "/auth/tfa-two",
+        "/auth/introspect",
+        "/auth/logout",
+        "/auth/refresh",
+        "/kcl/logout",
+        "/auth/login"
     };
     private final String[] PUBLIC_ENPOINTS_GET = {
-            "/users", "/auth/tfa-first", "/auth/tfa-two", "/auth/introspect", "/auth/logout", "/auth/refresh","/kcl/logout","/auth/login"
+        "/users",
+        "/auth/tfa-first",
+        "/auth/tfa-two",
+        "/auth/introspect",
+        "/auth/logout",
+        "/auth/refresh",
+        "/kcl/logout",
+        "/auth/login"
     };
     private final String[] PRIVATE_ENPOINTS = {"/permissions", "/roles"};
+
     @Value("${idp.enable}")
     Boolean idpEnable;
 
@@ -37,25 +52,26 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, PUBLIC_ENPOINTS_POST)
                 .permitAll()
-                .requestMatchers(HttpMethod.GET,PUBLIC_ENPOINTS_GET).permitAll()
-//                .requestMatchers(HttpMethod.GET, "/users")
-//                .hasRole("ADMIN")
-//                .requestMatchers(PRIVATE_ENPOINTS)
-//                .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, PUBLIC_ENPOINTS_GET)
+                .permitAll()
+                //                .requestMatchers(HttpMethod.GET, "/users")
+                //                .hasRole("ADMIN")
+                //                .requestMatchers(PRIVATE_ENPOINTS)
+                //                .hasRole("ADMIN")
                 .anyRequest()
                 .permitAll());
-        if(idpEnable) {
+        if (idpEnable) {
             httpSecurity.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
-        }
-        else {
+        } else {
             httpSecurity.oauth2ResourceServer(
                     oauth -> oauth.jwt(jwtConfigurer -> jwtConfigurer
                                     .decoder(jwtDecoder)
                                     .jwtAuthenticationConverter(jwtAuthenticationConverter()))
                             .authenticationEntryPoint(
-                                    new JwtAuthenticationEntryPoint()) // authenticationEntryPoint để bắt các lỗi chưa xác
+                                    new JwtAuthenticationEntryPoint()) // authenticationEntryPoint để bắt các lỗi chưa
+                    // xác
                     // thực
-            );
+                    );
         }
         httpSecurity.csrf(AbstractHttpConfigurer::disable); // tắt csrf để có thể sủ dụng authorizeHttpRequests
         return httpSecurity.build();

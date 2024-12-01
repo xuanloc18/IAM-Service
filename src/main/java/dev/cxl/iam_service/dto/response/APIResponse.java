@@ -1,4 +1,4 @@
-package dev.cxl.iam_service.dto.request;
+package dev.cxl.iam_service.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

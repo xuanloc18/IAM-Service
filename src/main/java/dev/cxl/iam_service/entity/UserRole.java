@@ -1,7 +1,5 @@
 package dev.cxl.iam_service.entity;
 
-import java.util.Date;
-
 import jakarta.persistence.*;
 
 import lombok.*;
@@ -13,14 +11,20 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Table(name = "invalid_tokens")
-public class InvalidateToken extends AuditableEntity {
+@Table(name = "user_roles")
+public class UserRole extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
+    @Column(name = "id")
     String id;
 
-    @Column(name = "expires_at", nullable = false)
-    Date expiryTime;
+    @Column(name = "user_id")
+    String userID;
+
+    @Column(name = "role_id")
+    String roleID;
+
+    @Column(name = "deleted")
+    Boolean deleted = false;
 }

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import dev.cxl.iam_service.dto.request.APIResponse;
+import dev.cxl.iam_service.dto.response.APIResponse;
 import dev.cxl.iam_service.service.PhotoService;
 
 @RestController

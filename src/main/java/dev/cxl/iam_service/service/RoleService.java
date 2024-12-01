@@ -26,6 +26,7 @@ public class RoleService {
 
     public RoleResponse create(RoleRequest request) {
         Role role = roleMapper.toRole(request);
+        role.setDeleted(false);
         role = roleRepository.save(role);
         return roleMapper.toRoleResponse(role);
     }

@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import dev.cxl.iam_service.dto.request.APIResponse;
 import dev.cxl.iam_service.dto.request.AuthenticationRequest;
 import dev.cxl.iam_service.dto.request.AuthenticationRequestTwo;
+import dev.cxl.iam_service.dto.response.APIResponse;
 import dev.cxl.iam_service.dto.response.AuthenticationResponse;
 import dev.cxl.iam_service.service.AuthenticationService;
 import dev.cxl.iam_service.service.TwoFactorAuthService;
@@ -30,13 +30,7 @@ public class TwoFactorAuthController {
                 .result(twoFactorAuthService.sendOtpMail(authenticationRequest))
                 .build();
     }
-    //    @PostMapping("/tfa-two")
-    //    APIResponse<Boolean> tfaTwo(@RequestBody AuthenticationRequestTwo two) {
-    //        return APIResponse.<Boolean>builder()
-    //                .result(twoFactorAuthService.validateOtp(two))
-    //                .build();
-    //
-    //    }
+
     @PostMapping("/tfa-two")
     APIResponse<AuthenticationResponse> authenticationResponseAPIResponse(@RequestBody AuthenticationRequestTwo two)
             throws ParseException {

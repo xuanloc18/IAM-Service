@@ -1,5 +1,12 @@
 package dev.cxl.iam_service.service.auth;
+
+import java.text.ParseException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.nimbusds.jose.JOSEException;
+
 import dev.cxl.iam_service.dto.identity.TokenExchangeResponseUser;
 import dev.cxl.iam_service.dto.request.AuthenticationRequest;
 import dev.cxl.iam_service.dto.request.ResetPassword;
@@ -8,16 +15,11 @@ import dev.cxl.iam_service.dto.request.UserUpdateRequest;
 import dev.cxl.iam_service.entity.User;
 import dev.cxl.iam_service.exception.AppException;
 import dev.cxl.iam_service.exception.ErrorCode;
-import dev.cxl.iam_service.respository.IndentityClient;
 import dev.cxl.iam_service.respository.UserRespository;
 import dev.cxl.iam_service.service.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import java.text.ParseException;
-
 
 @Service
-public class DefaultServiceImpl implements IAuthService{
+public class DefaultServiceImpl implements IAuthService {
     @Autowired
     AuthenticationService authenticationService;
 
@@ -26,10 +28,13 @@ public class DefaultServiceImpl implements IAuthService{
 
     @Autowired
     UserService userService;
+
     @Autowired
     private UserRespository userRespository;
+
     @Autowired
-    IndentityClient  indentityClient;
+    IndentityClient indentityClient;
+
     @Autowired
     private UserKCLService userKCLService;
 
@@ -40,16 +45,15 @@ public class DefaultServiceImpl implements IAuthService{
     }
 
     @Override
-    public boolean logout( String accessToken, String refreshToken) throws ParseException, JOSEException {
-     authenticationService.logout(accessToken, refreshToken);
+    public boolean logout(String accessToken, String refreshToken) throws ParseException, JOSEException {
+        authenticationService.logout(accessToken, refreshToken);
         return true;
     }
 
     @Override
     public boolean register(UserCreationRequest request) {
-       userService.createUser(request);
+        userService.createUser(request);
         return true;
-
     }
 
     @Override
@@ -59,15 +63,16 @@ public class DefaultServiceImpl implements IAuthService{
 
     @Override
     public Boolean enableUser(String token, String id, UserUpdateRequest request) throws ParseException {
-       User user = userRespository.findById(id).orElseThrow(()->new AppException(ErrorCode.USER_NOT_EXISTED));
-       user.setEnabled(request.getEnabled());
-       userRespository.save(user);
-       userKCLService.enableUser(userKCLService.tokenExchangeResponse().getAccessToken(), user.getUserKCLID(), request);
-       return true;
+        User user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        user.setEnabled(request.getEnabled());
+        userRespository.save(user);
+        userKCLService.enableUser(
+                userKCLService.tokenExchangeResponse().getAccessToken(), user.getUserKCLID(), request);
+        return true;
     }
 
-    public Boolean deleteSoft(String id, UserUpdateRequest request)  {
-        User user = userRespository.findById(id).orElseThrow(()->new AppException(ErrorCode.USER_NOT_EXISTED));
+    public Boolean deleteSoft(String id, UserUpdateRequest request) {
+        User user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         user.setDeleted(request.getDeleted());
         userRespository.save(user);
         return true;
@@ -75,11 +80,11 @@ public class DefaultServiceImpl implements IAuthService{
 
     @Override
     public Boolean resetPassword(String token, String id, ResetPassword resetPassword) throws ParseException {
-    User user = userRespository.findById(id).orElseThrow(()->new AppException(ErrorCode.USER_NOT_EXISTED));
-    user.setPassWord(resetPassword.getValue());
-    userRespository.save(user);
-    indentityClient.resetPassWord(userKCLService.tokenExchangeResponse().getAccessToken(),user.getUserKCLID(),resetPassword);
-    return true;
+        User user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        user.setPassWord(resetPassword.getValue());
+        userRespository.save(user);
+        indentityClient.resetPassWord(
+                userKCLService.tokenExchangeResponse().getAccessToken(), user.getUserKCLID(), resetPassword);
+        return true;
     }
-
 }

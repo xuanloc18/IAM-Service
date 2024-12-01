@@ -1,5 +1,11 @@
 package dev.cxl.iam_service.service.auth;
 
+import java.text.ParseException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import dev.cxl.iam_service.dto.identity.TokenExchangeResponseUser;
 import dev.cxl.iam_service.dto.request.AuthenticationRequest;
 import dev.cxl.iam_service.dto.request.ResetPassword;
@@ -10,30 +16,24 @@ import dev.cxl.iam_service.exception.AppException;
 import dev.cxl.iam_service.exception.ErrorCode;
 import dev.cxl.iam_service.respository.UserRespository;
 import dev.cxl.iam_service.service.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.text.ParseException;
 
 @Service
-public class KCLServiceImpl implements IAuthService{
+public class KCLServiceImpl implements IAuthService {
     @Autowired
     UserService userService;
 
     @Autowired
     UserKCLService userKCLService;
+
     @Autowired
     private UserRespository userRespository;
+
     @Autowired
     PasswordEncoder passwordEncoder;
 
-
-
     @Override
     public Object login(AuthenticationRequest authenticationRequest) {
-      return   userKCLService.tokenExchangeResponseUser(authenticationRequest);
-
+        return userKCLService.tokenExchangeResponseUser(authenticationRequest);
     }
 
     @Override
@@ -50,13 +50,12 @@ public class KCLServiceImpl implements IAuthService{
 
     @Override
     public TokenExchangeResponseUser getRefreshToken(String refreshToken) {
-         return userKCLService.refreshToken(refreshToken);
-
+        return userKCLService.refreshToken(refreshToken);
     }
 
     @Override
     public Boolean enableUser(String token, String id, UserUpdateRequest request) throws ParseException {
-        User user = userRespository.findByUserKCLID(id).orElseThrow(()->new AppException(ErrorCode.USER_NOT_EXISTED));
+        User user = userRespository.findByUserKCLID(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         user.setEnabled(request.getEnabled());
         userRespository.save(user);
         userKCLService.enableUser(userKCLService.tokenExchangeResponse().getAccessToken(), id, request);
@@ -71,7 +70,7 @@ public class KCLServiceImpl implements IAuthService{
     @Override
     public Boolean resetPassword(String token, String id, ResetPassword resetPassword) throws ParseException {
         userKCLService.resetPassWord(userKCLService.tokenExchangeResponse().getAccessToken(), id, resetPassword);
-        User user =userRespository.findByUserKCLID(id).orElseThrow(()->new AppException(ErrorCode.USER_NOT_EXISTED));
+        User user = userRespository.findByUserKCLID(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         user.setPassWord(passwordEncoder.encode(resetPassword.getValue()));
         userRespository.save(user);
         return null;

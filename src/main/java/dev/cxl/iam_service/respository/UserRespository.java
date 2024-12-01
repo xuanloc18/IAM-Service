@@ -12,9 +12,14 @@ import dev.cxl.iam_service.entity.User;
 @Repository
 public interface UserRespository extends JpaRepository<User, String> {
     Optional<User> findByUserMail(String userMail);
+
     Optional<User> findByUserKCLID(String string);
+
     boolean deleteByUserMail(String userMail);
+
     boolean existsByUserMail(String userMail);
+
     boolean existsByUserName(String userName);
+
     Page<User> findAll(Pageable pageable);
 }

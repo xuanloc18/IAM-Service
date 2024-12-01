@@ -1,9 +1,6 @@
 package dev.cxl.iam_service.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -14,13 +11,23 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Permission extends  AuditableEntity{
+@Table(name = "permissions")
+public class Permission extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false)
     String id;
-    Boolean deleted;
+
+    @Column(name = "deleted", nullable = false)
+    Boolean deleted = false;
+
+    @Column(name = "name", nullable = false, unique = true, length = 50)
     String name;
-    String resource_code;
+
+    @Column(name = "resource_code", nullable = false, length = 50)
+    String resourceCode;
+
+    @Column(name = "scope", nullable = false, length = 50)
     String scope;
 }

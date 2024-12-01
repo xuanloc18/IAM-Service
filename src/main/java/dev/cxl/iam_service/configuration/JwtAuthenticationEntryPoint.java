@@ -12,7 +12,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import dev.cxl.iam_service.dto.request.APIResponse;
+import dev.cxl.iam_service.dto.response.APIResponse;
 import dev.cxl.iam_service.exception.ErrorCode;
 
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {

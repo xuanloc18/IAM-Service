@@ -35,7 +35,6 @@ public class ApplicationInitConfig {
                 User user = User.builder()
                         .userMail("admin@gmail.com")
                         .passWord(passwordEncoder.encode("admin"))
-                        .roles(roles)
                         .build();
                 userRespository.save(user);
                 log.warn("admin user has been reated with default password:admin,please change it");

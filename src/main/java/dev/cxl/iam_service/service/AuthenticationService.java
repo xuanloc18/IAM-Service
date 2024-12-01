@@ -1,17 +1,13 @@
 package dev.cxl.iam_service.service;
 
-import java.security.KeyPair;
 import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.List;
-import java.util.StringJoiner;
 import java.util.UUID;
 
-import dev.cxl.iam_service.dto.identity.TokenExchangeResponseUser;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
@@ -19,10 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.security.crypto.encrypt.KeyStoreKeyFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.RSASSASigner;
@@ -31,6 +24,7 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
 import dev.cxl.iam_service.dto.AuthenticationProperties;
+import dev.cxl.iam_service.dto.identity.TokenExchangeResponseUser;
 import dev.cxl.iam_service.dto.request.*;
 import dev.cxl.iam_service.dto.response.AuthenticationResponse;
 import dev.cxl.iam_service.dto.response.IntrospectResponse;
@@ -108,6 +102,7 @@ public class AuthenticationService {
         if (!check) {
             throw new AppException(ErrorCode.INVALID_OTP);
         }
+
         var token = generrateToken(authenticationRequestTwo.getUserMail());
         SignedJWT signedJWT = SignedJWT.parse(token);
         String id = signedJWT.getJWTClaimsSet().getSubject();
@@ -130,7 +125,7 @@ public class AuthenticationService {
                 .expirationTime(new Date(
                         Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
                 .jwtID(UUID.randomUUID().toString())
-                .claim("scope", buildScrope(user))
+                .claim("name", user.getUserName())
                 .build();
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
         JWSObject jwsObject = new JWSObject(header, payload);
@@ -172,20 +167,20 @@ public class AuthenticationService {
         }
     }
 
-    private String buildScrope(User user) {
-        StringJoiner stringJoiner = new StringJoiner(" "); // các phần tử cách nhau bới " "
-        if (!CollectionUtils.isEmpty(user.getRoles())) {
-            List<Role> roles = roleRepository.findAllById(user.getRoles());
-            roles.forEach(role -> {
-                stringJoiner.add(role.getName());
-                if (!CollectionUtils.isEmpty(role.getPermissions())) {
-                    List<Permission> permissions = permissionRespository.findAllById(role.getPermissions());
-                    permissions.forEach(permission -> stringJoiner.add(permission.getName()));
-                }
-            });
-        }
-        return stringJoiner.toString();
-    }
+    //    private String buildScrope(User user) {
+    //        StringJoiner stringJoiner = new StringJoiner(" "); // các phần tử cách nhau bới " "
+    //        if (!CollectionUtils.isEmpty(user.getRoles())) {
+    //            List<Role> roles = roleRepository.findAllById(user.getRoles());
+    //            roles.forEach(role -> {
+    //                stringJoiner.add(role.getName());
+    //                if (!CollectionUtils.isEmpty(role.getPermissions())) {
+    //                    List<Permission> permissions = permissionRespository.findAllById(role.getPermissions());
+    //                    permissions.forEach(permission -> stringJoiner.add(permission.getName()));
+    //                }
+    //            });
+    //        }
+    //        return stringJoiner.toString();
+    //    }
 
     public SignedJWT verifyToken(String token) throws ParseException, JOSEException {
         SignedJWT signedJWT = SignedJWT.parse(token);
@@ -205,7 +200,7 @@ public class AuthenticationService {
 
     public void logout(String accessToken, String refreshToken) throws ParseException, JOSEException {
         try {
-            accessToken=accessToken.replace("Bearer ", "");
+            accessToken = accessToken.replace("Bearer ", "");
             var signToken = verifyToken(accessToken);
             String jit = signToken.getJWTClaimsSet().getJWTID();
             Date expiry = signToken.getJWTClaimsSet().getExpirationTime();
@@ -230,7 +225,6 @@ public class AuthenticationService {
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
-
     }
 
     public TokenExchangeResponseUser refreshToken(String refreshTokenn) throws ParseException {
@@ -260,6 +254,4 @@ public class AuthenticationService {
                 .refreshToken(refeshToken)
                 .build();
     }
-
-
 }

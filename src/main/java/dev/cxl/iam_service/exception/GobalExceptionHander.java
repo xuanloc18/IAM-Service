@@ -5,7 +5,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import dev.cxl.iam_service.dto.request.APIResponse;
+import dev.cxl.iam_service.dto.response.APIResponse;
 import lombok.extern.log4j.Log4j2;
 
 @Log4j2

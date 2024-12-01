@@ -5,8 +5,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import dev.cxl.iam_service.dto.request.APIResponse;
 import dev.cxl.iam_service.dto.request.PermissionRequest;
+import dev.cxl.iam_service.dto.response.APIResponse;
 import dev.cxl.iam_service.dto.response.PermissionResponse;
 import dev.cxl.iam_service.service.PermissionService;
 

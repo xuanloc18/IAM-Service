@@ -1,7 +1,5 @@
 package dev.cxl.iam_service.dto.response;
 
-import java.util.Set;
-
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -12,7 +10,13 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RoleResponse {
 
+    String id;
+
     String name;
+
+    String code;
+
     String description;
-    Set<String> permissions;
+
+    Boolean deleted;
 }

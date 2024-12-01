@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -21,5 +22,4 @@ public class UserUpdateRequest {
     LocalDate dateOfBirth;
     Boolean enabled;
     Boolean deleted;
-    Set<String> roles;
 }

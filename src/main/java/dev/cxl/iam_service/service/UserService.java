@@ -1,12 +1,9 @@
 package dev.cxl.iam_service.service;
 
-import org.springframework.data.domain.Pageable; // Đúng
-
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import dev.cxl.iam_service.dto.response.PageResponse;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
@@ -14,16 +11,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 
 import dev.cxl.iam_service.dto.request.*;
+import dev.cxl.iam_service.dto.response.PageResponse;
 import dev.cxl.iam_service.dto.response.UserResponse;
 import dev.cxl.iam_service.entity.HistoryActivity;
 import dev.cxl.iam_service.entity.InvalidateToken;
@@ -79,13 +77,13 @@ public class UserService {
         if (userRespository.existsByUserMail(request.getUserMail())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
-        User user = userMapper.toUser(request);
-        user.setUserKCLID(userKCLService.createUserKCL(request));
+        User user= userMapper.toUser(request);
+        if (idpEnable)user.setUserKCLID(userKCLService.createUserKCL(request));
         user.setEnabled(false);
         user.setPassWord(passwordEncoder.encode(request.getPassWord()));
-//        HashSet<String> roles = new HashSet<>();
-//        if (CollectionUtils.isEmpty(user.getRoles())) roles.add("USER");
-//        user.setRoles(roles);
+        //        HashSet<String> roles = new HashSet<>();
+        //        if (CollectionUtils.isEmpty(user.getRoles())) roles.add("USER");
+        //        user.setRoles(roles);
         twoFactorAuthService.sendCreatUser(user.getUserMail());
         return userMapper.toUserResponse(userRespository.save(user));
     }
@@ -112,17 +110,19 @@ public class UserService {
         return userMapper.toUserResponse(userRespository.save(user));
     }
 
-//    @PreAuthorize("hasRole('ADMIN')")
+    //    @PreAuthorize("hasRole('ADMIN')")
     public PageResponse<UserResponse> getAllUsers(int page, int size) {
-        Sort sort=Sort.by( "userID").descending();
-        Pageable pageable= PageRequest.of(page-1,size,sort);
-        var pageData=userRespository.findAll(pageable);
+        Sort sort = Sort.by("userID").descending();
+        Pageable pageable = PageRequest.of(page - 1, size, sort);
+        var pageData = userRespository.findAll(pageable);
         return PageResponse.<UserResponse>builder()
                 .currentPage(page)
                 .pageSize(pageData.getSize())
                 .totalPages(pageData.getTotalPages())
                 .totalElements(pageData.getTotalElements())
-                .data(pageData.getContent().stream().map(user -> userMapper.toUserResponse(user)).toList())
+                .data(pageData.getContent().stream()
+                        .map(user -> userMapper.toUserResponse(user))
+                        .toList())
                 .build();
     }
 
@@ -146,22 +146,21 @@ public class UserService {
     public UserResponse getMyInfor() {
         var context = SecurityContextHolder.getContext();
         String id = context.getAuthentication().getName();
-        User user ;
-        if(idpEnable){
+        User user;
+        if (idpEnable) {
             user = userRespository.findByUserKCLID(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        }
-        else {
+        } else {
             user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         }
 
         return userMapper.toUserResponse(user);
     }
+
     public UserResponse getInfor(String id) {
         User user;
-        if(idpEnable){
+        if (idpEnable) {
             user = userRespository.findByUserKCLID(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        }
-        else {
+        } else {
             user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         }
 
