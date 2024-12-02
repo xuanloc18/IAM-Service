@@ -1,6 +1,5 @@
 package dev.cxl.iam_service.configuration;
 
-import dev.cxl.iam_service.service.AuditorAwareImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.AuditorAware;

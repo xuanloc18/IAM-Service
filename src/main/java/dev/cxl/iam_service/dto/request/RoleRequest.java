@@ -14,5 +14,4 @@ public class RoleRequest {
     String code;
     String description;
     Boolean deleted = false;
-
 }

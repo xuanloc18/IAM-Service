@@ -38,8 +38,12 @@ public class TwoFactorAuthService {
                 .findByUserMail(authenticationRequest.getUserMail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         if (!user.getEnabled()) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new AppException(ErrorCode.USER_DIS_ENABLE);
         }
+        if (user.getDeleted()) {
+            throw new AppException(ErrorCode.USER_DELETED);
+        }
+
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         boolean authentication = passwordEncoder.matches(authenticationRequest.getPassWord(), user.getPassWord());
         if (!authentication) {

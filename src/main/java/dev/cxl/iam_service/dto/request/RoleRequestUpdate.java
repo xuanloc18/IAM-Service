@@ -14,5 +14,4 @@ public class RoleRequestUpdate {
     String code;
     String description;
     Boolean deleted;
-
 }

@@ -6,8 +6,12 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.List;
+import java.util.StringJoiner;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import dev.cxl.iam_service.configuration.KeyProvider;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
@@ -68,7 +72,7 @@ public class AuthenticationService {
     RoleRepository roleRepository;
 
     @Autowired
-    PermissionRespository permissionRespository;
+    UserRoleRepository userRoleRepository;
 
     @Autowired
     private ActivityService activityService;
@@ -105,7 +109,7 @@ public class AuthenticationService {
 
         var token = generrateToken(authenticationRequestTwo.getUserMail());
         SignedJWT signedJWT = SignedJWT.parse(token);
-        String id = signedJWT.getJWTClaimsSet().getSubject();
+        String id = signedJWT.getJWTClaimsSet().getJWTID();
         Date exDate = signedJWT.getJWTClaimsSet().getExpirationTime();
         return AuthenticationResponse.builder()
                 .token(token)
@@ -126,6 +130,7 @@ public class AuthenticationService {
                         Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
                 .jwtID(UUID.randomUUID().toString())
                 .claim("name", user.getUserName())
+                .claim("scope", buildRole(user.getUserID().toString()))
                 .build();
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
         JWSObject jwsObject = new JWSObject(header, payload);
@@ -166,21 +171,6 @@ public class AuthenticationService {
             throw new RuntimeException(e);
         }
     }
-
-    //    private String buildScrope(User user) {
-    //        StringJoiner stringJoiner = new StringJoiner(" "); // các phần tử cách nhau bới " "
-    //        if (!CollectionUtils.isEmpty(user.getRoles())) {
-    //            List<Role> roles = roleRepository.findAllById(user.getRoles());
-    //            roles.forEach(role -> {
-    //                stringJoiner.add(role.getName());
-    //                if (!CollectionUtils.isEmpty(role.getPermissions())) {
-    //                    List<Permission> permissions = permissionRespository.findAllById(role.getPermissions());
-    //                    permissions.forEach(permission -> stringJoiner.add(permission.getName()));
-    //                }
-    //            });
-    //        }
-    //        return stringJoiner.toString();
-    //    }
 
     public SignedJWT verifyToken(String token) throws ParseException, JOSEException {
         SignedJWT signedJWT = SignedJWT.parse(token);
@@ -253,5 +243,20 @@ public class AuthenticationService {
                 .accessToken(token)
                 .refreshToken(refeshToken)
                 .build();
+    }
+
+    public String buildRole(String userID) {
+        StringJoiner stringJoiner = new StringJoiner(" ");
+        // Lấy danh sách UserRole từ userRoleRepository
+        List<UserRole> roleIdList = userRoleRepository.findByUserID(userID);
+        // Trích xuất roleID từ từng UserRole
+        List<String> roleIds = roleIdList.stream()
+                .map(UserRole::getRoleID) // Lấy roleID từ UserRole
+                .collect(Collectors.toList());
+        // Tìm danh sách Role bằng roleID
+        List<Role> roles = roleRepository.findAllById(roleIds);
+
+        roles.forEach(role -> stringJoiner.add(role.getCode()));
+        return stringJoiner.toString();
     }
 }

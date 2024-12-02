@@ -1,13 +1,12 @@
 package dev.cxl.iam_service.controller;
 
-import java.util.List;
-
-import dev.cxl.iam_service.dto.response.PageResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import dev.cxl.iam_service.dto.request.PermissionRequest;
 import dev.cxl.iam_service.dto.response.APIResponse;
+import dev.cxl.iam_service.dto.response.PageResponse;
 import dev.cxl.iam_service.dto.response.PermissionResponse;
 import dev.cxl.iam_service.service.PermissionService;
 
@@ -17,6 +16,7 @@ public class PermissionController {
     @Autowired
     PermissionService permissionService;
 
+    @PreAuthorize("hasPermission('PERMISSION_DATA','CREATE')")
     @PostMapping
     APIResponse<PermissionResponse> create(@RequestBody PermissionRequest request) {
         return APIResponse.<PermissionResponse>builder()
@@ -24,16 +24,17 @@ public class PermissionController {
                 .build();
     }
 
+    @PreAuthorize("hasPermission('PERMISSION_DATA','VIEW')")
     @GetMapping
     APIResponse<PageResponse<PermissionResponse>> getAll(
             @RequestParam(value = "page", required = false, defaultValue = "1") int page,
-            @RequestParam(value = "pagesize", required = false, defaultValue = "10") int size)
-     {
+            @RequestParam(value = "pagesize", required = false, defaultValue = "10") int size) {
         return APIResponse.<PageResponse<PermissionResponse>>builder()
-                .result(permissionService.getListsPer(page,size))
+                .result(permissionService.getListsPer(page, size))
                 .build();
     }
 
+    @PreAuthorize("hasPermission('PERMISSION_DATA','DELETE')")
     @DeleteMapping("/{permission}")
     APIResponse<Void> delete(@PathVariable String permission) {
         permissionService.deletePermission(permission);

@@ -59,7 +59,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/refresh")
-    APIResponse<TokenExchangeResponseUser> logout(@PathParam("refreshToken") String refreshToken) throws Exception {
+    APIResponse<TokenExchangeResponseUser> refresh(@PathParam("refreshToken") String refreshToken) throws Exception {
         return APIResponse.<TokenExchangeResponseUser>builder()
                 .result(idpConfig.getAuthService().getRefreshToken(refreshToken))
                 .build();

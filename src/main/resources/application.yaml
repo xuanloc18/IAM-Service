@@ -4,12 +4,12 @@ server:
     context-path: /iam
 spring:
   datasource:
-#    url: "jdbc:postgresql://localhost:5432/iamservice"
-#    username: postgres
-#    password: "@Chuxuanloc26032003"
-    url: "jdbc:mysql://localhost:3306/iamservice"
-    username: root
-    password: 260303
+    url: "jdbc:postgresql://localhost:5432/iamservice"
+    username: postgres
+    password: "@Chuxuanloc26032003"
+#    url: "jdbc:mysql://localhost:3306/iamservice"
+#    username: root
+#    password: 260303
   mail:
     host: "smtp.gmail.com"
     port: 587
@@ -27,7 +27,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-#      dialect: org.hibernate.dialect.PostgreSQLDialect  # Chỉ định Dialect cho PostgreSQL
+      dialect: org.hibernate.dialect.PostgreSQLDialect  # Chỉ định Dialect cho PostgreSQL
     show-sql: true
 security:
   authentication:
@@ -57,12 +57,16 @@ jwt:
 idp:
   url: http://localhost:8080
   client-id: iam-service
-#  client-secret: EEQnppsmXZDGIVhYOqJTGfiT47yY60qC
-  client-secret: avNbp3yTahdCDjX0cWZi79TnQZ4KXASQ
+  client-secret: EEQnppsmXZDGIVhYOqJTGfiT47yY60qC
+#  client-secret: avNbp3yTahdCDjX0cWZi79TnQZ4KXASQ
   enable: false
   realms: CXL
 feign:
   hystrix:
     enabled: true
 
-
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    version: openapi_3_0

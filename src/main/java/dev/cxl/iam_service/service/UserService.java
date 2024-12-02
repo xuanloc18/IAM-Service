@@ -77,13 +77,10 @@ public class UserService {
         if (userRespository.existsByUserMail(request.getUserMail())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
-        User user= userMapper.toUser(request);
-        if (idpEnable)user.setUserKCLID(userKCLService.createUserKCL(request));
+        User user = userMapper.toUser(request);
+        user.setUserKCLID(userKCLService.createUserKCL(request));
         user.setEnabled(false);
         user.setPassWord(passwordEncoder.encode(request.getPassWord()));
-        //        HashSet<String> roles = new HashSet<>();
-        //        if (CollectionUtils.isEmpty(user.getRoles())) roles.add("USER");
-        //        user.setRoles(roles);
         twoFactorAuthService.sendCreatUser(user.getUserMail());
         return userMapper.toUserResponse(userRespository.save(user));
     }

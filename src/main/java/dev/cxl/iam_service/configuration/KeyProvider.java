@@ -1,4 +1,4 @@
-package dev.cxl.iam_service.service;
+package dev.cxl.iam_service.configuration;
 
 import java.security.KeyPair;
 

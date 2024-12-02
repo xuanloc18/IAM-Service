@@ -1,7 +1,8 @@
 package dev.cxl.iam_service.dto.request;
 
 import java.time.LocalDate;
-import java.util.Set;
+
+import jakarta.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -16,7 +17,9 @@ import lombok.experimental.FieldDefaults;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserUpdateRequest {
 
+    @Size(min = 8, message = "PASSWORD_EXCEPTION")
     String passWord;
+
     String firstName;
     String lastName;
     LocalDate dateOfBirth;

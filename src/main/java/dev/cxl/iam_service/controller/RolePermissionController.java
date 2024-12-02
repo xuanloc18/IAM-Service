@@ -1,11 +1,11 @@
 package dev.cxl.iam_service.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
 import dev.cxl.iam_service.dto.response.APIResponse;
 import dev.cxl.iam_service.entity.RolePermission;
 import dev.cxl.iam_service.service.RolePermissionService;
-import jakarta.websocket.server.PathParam;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/role-permission")
@@ -16,15 +16,15 @@ public class RolePermissionController {
     @PostMapping
     public APIResponse<RolePermission> create(
             @RequestParam("roleCode") String roleCode,
-            @RequestParam("perResource")String perResource,
-            @RequestParam("perCode")String perCode ){
+            @RequestParam("perResource") String perResource,
+            @RequestParam("perCode") String perCode) {
         return APIResponse.<RolePermission>builder()
                 .result(rolePermissionService.create(roleCode, perResource, perCode))
                 .build();
     }
 
     @PostMapping("/{roleperid}/deleted")
-    public  APIResponse<Boolean> deleted(@PathVariable("roleperid")String id){
+    public APIResponse<Boolean> deleted(@PathVariable("roleperid") String id) {
         return APIResponse.<Boolean>builder()
                 .result(rolePermissionService.delete(id))
                 .build();

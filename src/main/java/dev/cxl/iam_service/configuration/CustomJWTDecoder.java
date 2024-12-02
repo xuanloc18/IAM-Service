@@ -16,7 +16,6 @@ import com.nimbusds.jose.JOSEException;
 
 import dev.cxl.iam_service.dto.request.IntrospectRequest;
 import dev.cxl.iam_service.service.AuthenticationService;
-import dev.cxl.iam_service.service.KeyProvider;
 
 @ConditionalOnProperty(name = "idp.enable", havingValue = "false")
 @Component

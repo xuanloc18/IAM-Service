@@ -5,7 +5,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -19,28 +22,18 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     private final String[] PUBLIC_ENPOINTS_POST = {
-        "/users",
-        "/auth/tfa-first",
-        "/auth/tfa-two",
-        "/auth/introspect",
-        "/auth/logout",
-        "/auth/refresh",
-        "/kcl/logout",
-        "/auth/login"
+        "/users", "/auth/tfa-two", "/auth/introspect", "/auth/logout", "/auth/refresh",
     };
     private final String[] PUBLIC_ENPOINTS_GET = {
-        "/users",
-        "/auth/tfa-first",
-        "/auth/tfa-two",
-        "/auth/introspect",
-        "/auth/logout",
-        "/auth/refresh",
-        "/kcl/logout",
-        "/auth/login"
+        "/auth/login",
     };
-    private final String[] PRIVATE_ENPOINTS = {"/permissions", "/roles"};
+
+    private final String[] SWAGGER_ENDPOINT = {
+        "/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui/index.html"
+    };
 
     @Value("${idp.enable}")
     Boolean idpEnable;
@@ -54,12 +47,10 @@ public class SecurityConfig {
                 .permitAll()
                 .requestMatchers(HttpMethod.GET, PUBLIC_ENPOINTS_GET)
                 .permitAll()
-                //                .requestMatchers(HttpMethod.GET, "/users")
-                //                .hasRole("ADMIN")
-                //                .requestMatchers(PRIVATE_ENPOINTS)
-                //                .hasRole("ADMIN")
+                .requestMatchers(SWAGGER_ENDPOINT)
+                .permitAll()
                 .anyRequest()
-                .permitAll());
+                .authenticated());
         if (idpEnable) {
             httpSecurity.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
         } else {
@@ -90,5 +81,17 @@ public class SecurityConfig {
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
+    }
+
+    @Bean
+    CustomPermissionEvaluator customPermissionEvaluator() {
+        return new CustomPermissionEvaluator();
+    }
+    // chỉ ra rằng Spring Security sử dụng CustomPermissionEvaluator khi xử lý các bijou thức như @PreAuthoriz
+    @Bean
+    public MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
+        DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
+        expressionHandler.setPermissionEvaluator(customPermissionEvaluator());
+        return expressionHandler;
     }
 }

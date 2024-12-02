@@ -17,7 +17,6 @@ import lombok.experimental.FieldDefaults;
 public class InvalidateToken extends AuditableEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     String id;
 

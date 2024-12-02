@@ -5,6 +5,7 @@ import java.text.ParseException;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import dev.cxl.iam_service.configuration.IdpConfig;
@@ -27,6 +28,7 @@ public class UserController {
     @Autowired
     DefaultServiceImpl defaultServiceImpl;
 
+    @PreAuthorize("hasPermission('USER_DATA','VIEW')")
     @GetMapping
     APIResponse<PageResponse<UserResponse>> getAllUser(
             @RequestParam(value = "page", required = false, defaultValue = "1") int page,
@@ -50,6 +52,7 @@ public class UserController {
                 .build();
     }
 
+    @PreAuthorize("hasPermission('USER_DATA','UPDATE')")
     @PostMapping("/enable")
     APIResponse<String> enableUser(
             @RequestHeader("authorization") String token,
@@ -60,6 +63,7 @@ public class UserController {
         return APIResponse.<String>builder().result("enable thành công").build();
     }
 
+    @PreAuthorize("hasPermission('USER_DATA','DELETE')")
     @DeleteMapping("/DeleteUser")
     APIResponse<String> deleteUser(@RequestParam("userID") String userID, @RequestBody UserUpdateRequest request) {
         defaultServiceImpl.deleteSoft(userID, request);
@@ -80,6 +84,7 @@ public class UserController {
                 .build();
     }
 
+    @PreAuthorize("hasPermission('USER_DATA','UPDATE')")
     @PutMapping("reset-password")
     APIResponse<String> resetPassWord(
             @RequestHeader("authorization") String token,

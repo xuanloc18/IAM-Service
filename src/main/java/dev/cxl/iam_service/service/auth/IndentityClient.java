@@ -12,9 +12,9 @@ import feign.QueryMap;
 
 @FeignClient(name = "identity-client", url = "${idp.url}")
 public interface IndentityClient {
-   @PostMapping(
-           value = "/realms/${idp.realms}/protocol/openid-connect/token",
-           consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    @PostMapping(
+            value = "/realms/${idp.realms}/protocol/openid-connect/token",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     TokenExchangeResponse exchangToken(@QueryMap TokenExchangeParam param);
 
     @PostMapping(
