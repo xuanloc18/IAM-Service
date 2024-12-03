@@ -22,6 +22,14 @@ public interface RoleRepository extends JpaRepository<Role, String> {
     @Query("SELECT r.code FROM Role r " + "JOIN UserRole ur ON r.id = ur.roleID "
             + "JOIN User u ON u.userID = ur.userID "
             + "WHERE u.userID = :userID "
+            + "AND r.deleted = false "
             + "AND r.code = :code")
-    Optional<String> findRoleName(@Param("userID") String userID, @Param("code") String code);
+    Optional<String> findRoleNameByUserID(@Param("userID") String userID, @Param("code") String code);
+
+    @Query("SELECT r.code FROM Role r " + "JOIN UserRole ur ON r.id = ur.roleID "
+            + "JOIN User u ON u.userID = ur.userID "
+            + "WHERE u.userKCLID = :userKCLID "
+            + "AND r.deleted = false "
+            + "AND r.code = :code")
+    Optional<String> findRoleNameByUserKCLID(@Param("userKCLID") String userKCLID, @Param("code") String code);
 }

@@ -3,7 +3,6 @@ package dev.cxl.iam_service.controller;
 import java.io.IOException;
 import java.text.ParseException;
 
-import dev.cxl.iam_service.dto.response.AuthenticationResponse;
 import jakarta.websocket.server.PathParam;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +14,7 @@ import dev.cxl.iam_service.configuration.IdpConfig;
 import dev.cxl.iam_service.dto.identity.TokenExchangeResponseUser;
 import dev.cxl.iam_service.dto.request.*;
 import dev.cxl.iam_service.dto.response.APIResponse;
+import dev.cxl.iam_service.dto.response.AuthenticationResponse;
 import dev.cxl.iam_service.dto.response.IntrospectResponse;
 import dev.cxl.iam_service.service.AuthenticationService;
 import dev.cxl.iam_service.service.UserService;
@@ -37,7 +37,7 @@ public class AuthenticationController {
     @Autowired
     IdpConfig idpConfig;
 
-    @GetMapping("/login")
+    @PostMapping("/login")
     public APIResponse<Object> login(@RequestBody AuthenticationRequest authenticationRequest) throws IOException {
         return APIResponse.<Object>builder()
                 .result(idpConfig.getAuthService().login(authenticationRequest))
@@ -79,11 +79,11 @@ public class AuthenticationController {
                 .result(userService.checkotp(forgotPassWord))
                 .build();
     }
+
     @PostMapping("/tfa-two")
     APIResponse<AuthenticationResponse> authenticationResponseAPIResponse(@RequestBody AuthenticationRequestTwo two)
             throws ParseException {
         var result = authenticationService.authenticate(two);
         return APIResponse.<AuthenticationResponse>builder().result(result).build();
     }
-
 }

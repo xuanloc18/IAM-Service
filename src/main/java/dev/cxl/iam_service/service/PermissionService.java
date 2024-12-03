@@ -51,7 +51,19 @@ public class PermissionService {
                 .build();
     }
 
-    public void deletePermission(String name) {
-        permissionRespository.deleteById(name);
+    public void delete(String id) {
+        Permission permission = permissionRespository
+                .findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_EXISTED));
+        permission.setDeleted(true);
+        permissionRespository.save(permission);
+    }
+
+    public void undelete(String id) {
+        Permission permission = permissionRespository
+                .findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_EXISTED));
+        permission.setDeleted(false);
+        permissionRespository.save(permission);
     }
 }

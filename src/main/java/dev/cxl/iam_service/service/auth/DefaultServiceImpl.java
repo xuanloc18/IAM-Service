@@ -57,7 +57,7 @@ public class DefaultServiceImpl implements IAuthService {
     }
 
     @Override
-    public TokenExchangeResponseUser getRefreshToken(String refreshToken) throws ParseException {
+    public TokenExchangeResponseUser getRefreshToken(String refreshToken) throws ParseException, JOSEException {
         return authenticationService.refreshToken(refreshToken);
     }
 
@@ -71,9 +71,16 @@ public class DefaultServiceImpl implements IAuthService {
         return true;
     }
 
-    public Boolean deleteSoft(String id, UserUpdateRequest request) {
+    public Boolean delete(String id) {
         User user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        user.setDeleted(request.getDeleted());
+        user.setDeleted(true);
+        userRespository.save(user);
+        return true;
+    }
+
+    public Boolean undelete(String id) {
+        User user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        user.setDeleted(false);
         userRespository.save(user);
         return true;
     }

@@ -17,11 +17,9 @@ public interface IAuthService {
 
     boolean register(UserCreationRequest request);
 
-    TokenExchangeResponseUser getRefreshToken(String refreshToken) throws ParseException;
+    TokenExchangeResponseUser getRefreshToken(String refreshToken) throws ParseException, JOSEException;
 
     Boolean enableUser(String token, String id, UserUpdateRequest request) throws ParseException;
-
-    Boolean deleteSoft(String id, UserUpdateRequest request);
 
     Boolean resetPassword(String token, String id, ResetPassword resetPassword) throws ParseException;
 }

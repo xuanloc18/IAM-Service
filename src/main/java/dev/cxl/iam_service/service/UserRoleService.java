@@ -28,6 +28,9 @@ public class UserRoleService {
                 .findByUserMail(userMail)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
         Role role = roleRepository.findByCode(roleCode).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
+        if (role.getDeleted()) {
+            throw new AppException(ErrorCode.ROLE_DELETE);
+        }
         Boolean check = userRoleRepository.findByUserID(user.getUserID()).stream()
                 .anyMatch(userRole -> userRole.getRoleID().equals(role.getId()));
 
@@ -40,10 +43,18 @@ public class UserRoleService {
                 .build());
     }
 
-    public Boolean deleteSoft(String id) {
+    public Boolean delete(String id) {
         UserRole role =
                 userRoleRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_ROLE_NOT_EXISTED));
         role.setDeleted(true);
+        userRoleRepository.save(role);
+        return true;
+    }
+
+    public Boolean undelete(String id) {
+        UserRole role =
+                userRoleRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_ROLE_NOT_EXISTED));
+        role.setDeleted(false);
         userRoleRepository.save(role);
         return true;
     }

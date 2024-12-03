@@ -50,7 +50,15 @@ public class RoleService {
                 .build();
     }
 
-    public void delete(String role) {
-        roleRepository.deleteById(role);
+    public void delete(String id) {
+        Role role = roleRepository.findByCode(id).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
+        role.setDeleted(true);
+        roleRepository.save(role);
+    }
+
+    public void undelete(String id) {
+        Role role = roleRepository.findByCode(id).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
+        role.setDeleted(false);
+        roleRepository.save(role);
     }
 }

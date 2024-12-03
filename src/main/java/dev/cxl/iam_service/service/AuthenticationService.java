@@ -3,16 +3,9 @@ package dev.cxl.iam_service.service;
 import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.List;
-import java.util.StringJoiner;
 import java.util.UUID;
-import java.util.stream.Collectors;
-
-import dev.cxl.iam_service.configuration.KeyProvider;
-import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +20,7 @@ import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
+import dev.cxl.iam_service.configuration.KeyProvider;
 import dev.cxl.iam_service.dto.AuthenticationProperties;
 import dev.cxl.iam_service.dto.identity.TokenExchangeResponseUser;
 import dev.cxl.iam_service.dto.request.*;
@@ -69,22 +63,13 @@ public class AuthenticationService {
     KeyProvider keyProvider;
 
     @Autowired
-    RoleRepository roleRepository;
-
-    @Autowired
-    UserRoleRepository userRoleRepository;
-
-    @Autowired
     private ActivityService activityService;
-
-    @Autowired
-    private HttpServletRequest httpServletRequest;
 
     @Autowired
     private TwoFactorAuthService twoFactorAuthService;
 
     @Autowired
-    private RefreshTokenRepository refreshTokenRepository;
+    private InvalidRefreshTokenRepository invalidRefreshTokenRepository;
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         var token = request.getToken();
@@ -106,14 +91,14 @@ public class AuthenticationService {
         if (!check) {
             throw new AppException(ErrorCode.INVALID_OTP);
         }
-
+        // activity
+        activityService.createHistoryActivity(user.getUserID(), UserAction.LOGIN);
         var token = generrateToken(authenticationRequestTwo.getUserMail());
         SignedJWT signedJWT = SignedJWT.parse(token);
-        String id = signedJWT.getJWTClaimsSet().getJWTID();
-        Date exDate = signedJWT.getJWTClaimsSet().getExpirationTime();
+        String idToken = signedJWT.getJWTClaimsSet().getJWTID();
         return AuthenticationResponse.builder()
                 .token(token)
-                .refreshToken(generrateRefreshToken(authenticationRequestTwo.getUserMail(), id, exDate))
+                .refreshToken(generrateRefreshToken(user.getUserID(), idToken))
                 .authentication(true)
                 .build();
     }
@@ -130,7 +115,6 @@ public class AuthenticationService {
                         Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
                 .jwtID(UUID.randomUUID().toString())
                 .claim("name", user.getUserName())
-                .claim("scope", buildRole(user.getUserID().toString()))
                 .build();
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
         JWSObject jwsObject = new JWSObject(header, payload);
@@ -144,27 +128,21 @@ public class AuthenticationService {
         }
     }
 
-    public String generrateRefreshToken(String mail, String accessTokenID, Date date) {
-        User user =
-                (userRespository.findByUserMail(mail)).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    public String generrateRefreshToken(String userId, String idToken) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.RS256);
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(user.getUserID().toString())
+                .subject(userId)
                 .issueTime(new Date())
                 .expirationTime(new Date(Instant.now()
                         .plus(REFESHABLE_DURATION, ChronoUnit.SECONDS)
                         .toEpochMilli()))
                 .jwtID(UUID.randomUUID().toString())
+                .claim("idToken", idToken)
                 .build();
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
         JWSObject jwsObject = new JWSObject(header, payload);
         try {
             jwsObject.sign(new RSASSASigner(keyProvider.getKeyPair().getPrivate()));
-            refreshTokenRepository.save(RefreshToken.builder()
-                    .refreshToken(jwsObject.serialize())
-                    .expiresAccessToken(date)
-                    .accessTokenID(accessTokenID)
-                    .build());
             return jwsObject.serialize();
         } catch (JOSEException e) {
             log.error("can not create access token", e);
@@ -192,23 +170,19 @@ public class AuthenticationService {
         try {
             accessToken = accessToken.replace("Bearer ", "");
             var signToken = verifyToken(accessToken);
-            String jit = signToken.getJWTClaimsSet().getJWTID();
-            Date expiry = signToken.getJWTClaimsSet().getExpirationTime();
-            String userId = signToken.getJWTClaimsSet().getSubject();
-            refreshTokenRepository.deleteByAccessTokenID(jit);
-
-            // Save history activity
-            activityService.createHistoryActivity(HistoryActivity.builder()
-                    .activityType(UserAction.LOGOUT.name())
-                    .activityName(UserAction.LOGOUT.getDescription())
-                    .userID(userId)
-                    .activityStart(LocalDateTime.now())
-                    .browserID(httpServletRequest.getRemoteAddr())
-                    .build());
+            var signRefreshToken = verifyToken(refreshToken);
+            String tokenID = signToken.getJWTClaimsSet().getJWTID();
+            String refreshTokenID = signRefreshToken.getJWTClaimsSet().getJWTID();
+            String userID = signToken.getJWTClaimsSet().getSubject();
 
             InvalidateToken invalidateToken =
-                    InvalidateToken.builder().id(jit).expiryTime(expiry).build();
+                    InvalidateToken.builder().id(tokenID).build();
             invalidateTokenRepository.save(invalidateToken);
+            invalidRefreshTokenRepository.save(
+                    InvalidateRefreshToken.builder().id(refreshTokenID).build());
+
+            // activity
+            activityService.createHistoryActivity(userID, UserAction.LOGOUT);
         } catch (AppException exception) {
         } catch (JOSEException e) {
             throw new RuntimeException(e);
@@ -217,46 +191,27 @@ public class AuthenticationService {
         }
     }
 
-    public TokenExchangeResponseUser refreshToken(String refreshTokenn) throws ParseException {
+    public TokenExchangeResponseUser refreshToken(String refreshTokenn) throws ParseException, JOSEException {
         SignedJWT signedJWT = SignedJWT.parse(refreshTokenn);
-        RefreshToken refreshToken = refreshTokenRepository
-                .findRefreshTokenByRefreshToken(refreshTokenn)
-                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
-        Boolean checkTime =
-                signedJWT.getJWTClaimsSet().getExpirationTime().toInstant().isAfter(Instant.now());
-        if (!checkTime) throw new AppException(ErrorCode.UNAUTHENTICATED);
-        InvalidateToken invalidateToken = InvalidateToken.builder()
-                .id(refreshToken.getAccessTokenID())
-                .expiryTime(refreshToken.getExpiresAccessToken())
-                .build();
+        Boolean check = invalidRefreshTokenRepository.existsById(
+                signedJWT.getJWTClaimsSet().getJWTID());
+        if (check) throw new AppException(ErrorCode.UNAUTHENTICATED);
+        verifyToken(refreshTokenn);
+        String userId = signedJWT.getJWTClaimsSet().getSubject();
+        String tokenId = signedJWT.getJWTClaimsSet().getStringClaim("idToken");
+        InvalidateToken invalidateToken = InvalidateToken.builder().id(tokenId).build();
         invalidateTokenRepository.save(invalidateToken);
-        refreshTokenRepository.deleteByAccessTokenID(invalidateToken.getId());
-        var userID = signedJWT.getJWTClaimsSet().getSubject();
-        User user = userRespository.findById(userID).orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
+        invalidRefreshTokenRepository.save(InvalidateRefreshToken.builder()
+                .id(signedJWT.getJWTClaimsSet().getJWTID())
+                .build());
+        User user = userRespository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
         var token = generrateToken(user.getUserMail());
         SignedJWT signedJWT1 = SignedJWT.parse(token);
-        var refeshToken = generrateRefreshToken(
-                user.getUserMail(),
-                signedJWT1.getJWTClaimsSet().getJWTID(),
-                signedJWT1.getJWTClaimsSet().getExpirationTime());
+        var refeshToken =
+                generrateRefreshToken(userId, signedJWT1.getJWTClaimsSet().getJWTID());
         return TokenExchangeResponseUser.builder()
                 .accessToken(token)
                 .refreshToken(refeshToken)
                 .build();
-    }
-
-    public String buildRole(String userID) {
-        StringJoiner stringJoiner = new StringJoiner(" ");
-        // Lấy danh sách UserRole từ userRoleRepository
-        List<UserRole> roleIdList = userRoleRepository.findByUserID(userID);
-        // Trích xuất roleID từ từng UserRole
-        List<String> roleIds = roleIdList.stream()
-                .map(UserRole::getRoleID) // Lấy roleID từ UserRole
-                .collect(Collectors.toList());
-        // Tìm danh sách Role bằng roleID
-        List<Role> roles = roleRepository.findAllById(roleIds);
-
-        roles.forEach(role -> stringJoiner.add(role.getCode()));
-        return stringJoiner.toString();
     }
 }

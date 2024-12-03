@@ -1,10 +1,7 @@
 package dev.cxl.iam_service.service;
 
 import java.text.ParseException;
-import java.time.LocalDateTime;
 import java.util.*;
-
-import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +21,6 @@ import com.nimbusds.jwt.SignedJWT;
 import dev.cxl.iam_service.dto.request.*;
 import dev.cxl.iam_service.dto.response.PageResponse;
 import dev.cxl.iam_service.dto.response.UserResponse;
-import dev.cxl.iam_service.entity.HistoryActivity;
 import dev.cxl.iam_service.entity.InvalidateToken;
 import dev.cxl.iam_service.entity.User;
 import dev.cxl.iam_service.enums.UserAction;
@@ -63,9 +59,6 @@ public class UserService {
     private ActivityService activityService;
 
     @Autowired
-    private HttpServletRequest httpServletRequest;
-
-    @Autowired
     TwoFactorAuthService twoFactorAuthService;
 
     @Autowired
@@ -96,19 +89,11 @@ public class UserService {
         }
         user.setEnabled(true);
 
-        // Save history activity
-        activityService.createHistoryActivity(HistoryActivity.builder()
-                .activityType(UserAction.CREATE.name())
-                .activityName(UserAction.CREATE.getDescription())
-                .userID(user.getUserID())
-                .activityStart(LocalDateTime.now())
-                .browserID(httpServletRequest.getRemoteAddr())
-                .build());
+        activityService.createHistoryActivity(user.getUserID(), UserAction.CREATE);
 
         return userMapper.toUserResponse(userRespository.save(user));
     }
 
-    //    @PreAuthorize("hasRole('ADMIN')")
     public PageResponse<UserResponse> getAllUsers(int page, int size) {
         Sort sort = Sort.by("userID").descending();
         Pageable pageable = PageRequest.of(page - 1, size, sort);
@@ -131,13 +116,7 @@ public class UserService {
         user.setPassWord(passwordEncoder.encode(request.getPassWord()));
 
         // Save history activity
-        activityService.createHistoryActivity(HistoryActivity.builder()
-                .activityType(UserAction.UPDATE_PROFILE.name())
-                .activityName(UserAction.UPDATE_PROFILE.getDescription())
-                .userID(user.getUserID())
-                .activityStart(LocalDateTime.now())
-                .browserID(httpServletRequest.getRemoteAddr())
-                .build());
+        activityService.createHistoryActivity(user.getUserID(), UserAction.UPDATE_PROFILE);
         return userMapper.toUserResponse(userRespository.save(user));
     }
 
@@ -180,13 +159,7 @@ public class UserService {
         log.info(user.getPassWord());
 
         // Save history activity
-        activityService.createHistoryActivity(HistoryActivity.builder()
-                .activityType(UserAction.CHANGE_PASSWORD.name())
-                .activityName(UserAction.CHANGE_PASSWORD.getDescription())
-                .userID(user.getUserID())
-                .activityStart(LocalDateTime.now())
-                .browserID(httpServletRequest.getRemoteAddr())
-                .build());
+        activityService.createHistoryActivity(user.getUserID(), UserAction.CHANGE_PASSWORD);
         userRespository.save(user);
         return true;
     }
@@ -213,20 +186,20 @@ public class UserService {
         // Save history activity
         invalidateTokenRepository.save(InvalidateToken.builder()
                 .id(signedJWT.getJWTClaimsSet().getJWTID())
-                .expiryTime(signedJWT.getJWTClaimsSet().getExpirationTime())
                 .build());
         return true;
     }
 
-    public List<UserResponse> findUserByName(String userName,int page,int size,Object attribute,String key) {
-        Pageable pageable=PageRequest.of(page-1,size,sort(attribute,key));
-        Page<User> user =
-                userRespository.findUserByUserName(userName,pageable);
-       return user.getContent().stream().map(user1 -> userMapper.toUserResponse(user1)).toList();
-
+    public List<UserResponse> findUserByKey(String keyKey, int page, int size, Object attribute, String key) {
+        Pageable pageable = PageRequest.of(page - 1, size, sort(attribute, key));
+        Page<User> user = userRespository.findUsersByKey(keyKey, pageable);
+        return user.getContent().stream()
+                .map(user1 -> userMapper.toUserResponse(user1))
+                .toList();
     }
-    public Sort sort(Object attribute,String key){
-        if(key.equals("DS")){
+
+    public Sort sort(Object attribute, String key) {
+        if (key.equals("DS")) {
             return Sort.by((String) attribute).descending();
         }
         return Sort.by(attribute.toString()).ascending();

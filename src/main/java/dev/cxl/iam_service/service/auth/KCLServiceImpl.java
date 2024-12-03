@@ -63,11 +63,6 @@ public class KCLServiceImpl implements IAuthService {
     }
 
     @Override
-    public Boolean deleteSoft(String id, UserUpdateRequest request) {
-        return null;
-    }
-
-    @Override
     public Boolean resetPassword(String token, String id, ResetPassword resetPassword) throws ParseException {
         userKCLService.resetPassWord(userKCLService.tokenExchangeResponse().getAccessToken(), id, resetPassword);
         User user = userRespository.findByUserKCLID(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));

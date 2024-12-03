@@ -28,10 +28,12 @@ public class RolePermissionService {
         Permission permission = permissionRespository
                 .findByResourceCodeAndScope(perRe, perCode)
                 .orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_EXISTED));
+        if (permission.getDeleted()) {
+            throw new AppException(ErrorCode.PERMISSION_DELETE);
+        }
         Boolean check = rolePermissionRepository.findByRoleId(role.getId()).stream()
                 .anyMatch(rolePermission -> rolePermission.getPermissionId().equals(permission.getId()));
         if (check) throw new AppException(ErrorCode.ROLE_HAD_PERMISSION);
-
         return rolePermissionRepository.save(RolePermission.builder()
                 .roleId(role.getId())
                 .permissionId(permission.getId())
@@ -44,6 +46,15 @@ public class RolePermissionService {
                 .findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.ROLE_PERMISSION_NOT_EXISTED));
         rolePermission.setDeleted(true);
+        rolePermissionRepository.save(rolePermission);
+        return true;
+    }
+
+    public boolean undelete(String id) {
+        RolePermission rolePermission = rolePermissionRepository
+                .findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.ROLE_PERMISSION_NOT_EXISTED));
+        rolePermission.setDeleted(false);
         rolePermissionRepository.save(rolePermission);
         return true;
     }

@@ -16,7 +16,6 @@ public class RoleController {
     @Autowired
     RoleService roleService;
 
-    //    @PreAuthorize("hasPermission('ROLE_DATA','CREATE')")
     @PostMapping
     APIResponse<RoleResponse> create(@RequestBody RoleRequest request) {
         return APIResponse.<RoleResponse>builder()
@@ -35,9 +34,16 @@ public class RoleController {
     }
 
     @PreAuthorize("hasPermission('ROLE_DATA','DELETE')")
-    @PostMapping("/{role}/deleted")
-    APIResponse<Void> delete(@PathVariable String role) {
-        roleService.delete(role);
+    @PostMapping("/{roleId}/deleted")
+    APIResponse<Void> delete(@PathVariable String roleId) {
+        roleService.delete(roleId);
+        return APIResponse.<Void>builder().build();
+    }
+
+    @PreAuthorize("hasPermission('ROLE_DATA','DELETE')")
+    @PostMapping("/{roleId}/undeleted")
+    APIResponse<Void> undelete(@PathVariable String roleId) {
+        roleService.undelete(roleId);
         return APIResponse.<Void>builder().build();
     }
 }

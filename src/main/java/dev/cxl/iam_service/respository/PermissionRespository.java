@@ -27,4 +27,15 @@ public interface PermissionRespository extends JpaRepository<Permission, String>
             + "AND p.scope = :scope ")
     Optional<String> findPermissionIdByUserAndScope(
             @Param("userID") String userID, @Param("resourceCode") String resourceCode, @Param("scope") String scope);
+
+    @Query("SELECT p.id FROM Permission p " + "JOIN RolePermission rp ON p.id = rp.permissionId "
+            + "JOIN UserRole ur ON rp.roleId = ur.roleID "
+            + "JOIN User u ON ur.userID = u.userID "
+            + "WHERE u.userKCLID = :userKCLID "
+            + "AND p.resourceCode = :resourceCode "
+            + "AND p.scope = :scope ")
+    Optional<String> findPermissionIdByUserKCLAndScope(
+            @Param("userKCLID") String userKCLID,
+            @Param("resourceCode") String resourceCode,
+            @Param("scope") String scope);
 }

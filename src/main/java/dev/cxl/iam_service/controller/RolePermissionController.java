@@ -29,4 +29,11 @@ public class RolePermissionController {
                 .result(rolePermissionService.delete(id))
                 .build();
     }
+
+    @PostMapping("/{roleperid}/undeleted")
+    public APIResponse<Boolean> undeleted(@PathVariable("roleperid") String id) {
+        return APIResponse.<Boolean>builder()
+                .result(rolePermissionService.undelete(id))
+                .build();
+    }
 }

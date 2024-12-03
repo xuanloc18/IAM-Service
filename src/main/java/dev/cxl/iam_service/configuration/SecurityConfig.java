@@ -25,10 +25,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
     private final String[] PUBLIC_ENPOINTS_POST = {
-        "/users", "/auth/tfa-two", "/auth/introspect", "/auth/logout", "/auth/refresh",
-    };
-    private final String[] PUBLIC_ENPOINTS_GET = {
-        "/auth/login",
+        "/users", "/auth/tfa-two", "/auth/introspect", "/auth/logout", "/auth/refresh", "/auth/login"
     };
 
     private final String[] SWAGGER_ENDPOINT = {
@@ -44,8 +41,6 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, PUBLIC_ENPOINTS_POST)
-                .permitAll()
-                .requestMatchers(HttpMethod.GET, PUBLIC_ENPOINTS_GET)
                 .permitAll()
                 .requestMatchers(SWAGGER_ENDPOINT)
                 .permitAll()

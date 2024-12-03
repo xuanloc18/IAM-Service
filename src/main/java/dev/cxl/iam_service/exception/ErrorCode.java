@@ -28,6 +28,8 @@ public enum ErrorCode {
     USER_DIS_ENABLE(1016, "User dis enable", HttpStatus.BAD_REQUEST),
     USER_DELETED(1016, "User deleted", HttpStatus.BAD_REQUEST),
     EMAIL_EXCEPTION(1017, "do not form email", HttpStatus.BAD_REQUEST),
+    ROLE_DELETE(1018, "role deleted", HttpStatus.BAD_REQUEST),
+    PERMISSION_DELETE(1019, "permission deleted", HttpStatus.BAD_REQUEST),
     ;
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

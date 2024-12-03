@@ -45,7 +45,7 @@ public class UserController {
         return APIResponse.<String>builder().result("").build();
     }
 
-    @GetMapping("/confirmCreateUser")
+    @PostMapping("/confirmCreateUser")
     APIResponse<String> confirmCreateUser(@RequestParam("email") String email, @RequestParam("otp") String otp) {
         userService.confirmCreateUser(email, otp);
         return APIResponse.<String>builder()
@@ -65,9 +65,16 @@ public class UserController {
     }
 
     @PreAuthorize("hasPermission('USER_DATA','DELETE')")
-    @DeleteMapping("/deleted")
-    APIResponse<String> deleteUser(@RequestParam("userID") String userID, @RequestBody UserUpdateRequest request) {
-        defaultServiceImpl.deleteSoft(userID, request);
+    @PostMapping("/{userID}/deleted")
+    APIResponse<String> deleteUser(@PathVariable("userID") String userID) {
+        defaultServiceImpl.delete(userID);
+        return APIResponse.<String>builder().result("thành công").build();
+    }
+
+    @PreAuthorize("hasPermission('USER_DATA','DELETE')")
+    @PostMapping("/{userID}/undeleted")
+    APIResponse<String> undeleteUser(@PathVariable("userID") String userID) {
+        defaultServiceImpl.undelete(userID);
         return APIResponse.<String>builder().result("thành công").build();
     }
 
@@ -78,7 +85,8 @@ public class UserController {
                 .build();
     }
 
-    @GetMapping("/Infor/{userID}")
+    @PreAuthorize("hasPermission('USER_DATA','VIEW')")
+    @GetMapping("/{userID}/infor")
     APIResponse<UserResponse> getinforUser(@PathVariable String userID) {
         return APIResponse.<UserResponse>builder()
                 .result(userService.getInfor(userID))
@@ -101,6 +109,7 @@ public class UserController {
         userService.replacePassword(request);
         return APIResponse.<String>builder().result("Chang password successful").build();
     }
+
     @PutMapping({"/updateInfor"})
     UserResponse updateUser(@RequestBody UserUpdateRequest request) {
         return userService.updareUser(request);
@@ -109,14 +118,13 @@ public class UserController {
     @PreAuthorize("hasPermission('USER_DATA','VIEW')")
     @PostMapping("/search-user")
     APIResponse<List<UserResponse>> findUserByUserName(
-           @RequestParam(value = "userName") String userName,
-           @RequestParam(value = "page")int page,
-           @RequestParam(value = "size")int size,
-           @RequestParam(value = "attribute")Object attribute,
-           @RequestParam(value = "key")String key)
-    {
+            @RequestParam(value = "key") String key,
+            @RequestParam(value = "page", required = false, defaultValue = "1") int page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") int size,
+            @RequestParam(value = "attribute") Object attribute,
+            @RequestParam(value = "key1") String key1) {
         return APIResponse.<List<UserResponse>>builder()
-                .result(userService.findUserByName(userName, page, size, attribute, key))
+                .result(userService.findUserByKey(key, page, size, attribute, key))
                 .build();
     }
 }
