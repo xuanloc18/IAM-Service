@@ -3,6 +3,7 @@ package dev.cxl.iam_service.controller;
 import java.io.IOException;
 import java.text.ParseException;
 
+import dev.cxl.iam_service.dto.response.AuthenticationResponse;
 import jakarta.websocket.server.PathParam;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,11 +72,18 @@ public class AuthenticationController {
         return APIResponse.<String>builder().result("Chuc ban thanh cong").build();
     }
 
-    @PutMapping("/change-pass")
-    APIResponse<Boolean> changePass(@RequestBody ForgotPassWord forgotPassWord) throws ParseException, JOSEException {
+    @PutMapping("/forgot-pass")
+    APIResponse<Boolean> forgotPass(@RequestBody ForgotPassWord forgotPassWord) throws ParseException, JOSEException {
 
         return APIResponse.<Boolean>builder()
                 .result(userService.checkotp(forgotPassWord))
                 .build();
     }
+    @PostMapping("/tfa-two")
+    APIResponse<AuthenticationResponse> authenticationResponseAPIResponse(@RequestBody AuthenticationRequestTwo two)
+            throws ParseException {
+        var result = authenticationService.authenticate(two);
+        return APIResponse.<AuthenticationResponse>builder().result(result).build();
+    }
+
 }

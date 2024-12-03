@@ -2,6 +2,7 @@ package dev.cxl.iam_service.configuration;
 
 import org.springframework.beans.factory.annotation.Configurable;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import dev.cxl.iam_service.service.auth.DefaultServiceImpl;
@@ -9,7 +10,7 @@ import dev.cxl.iam_service.service.auth.IAuthService;
 import dev.cxl.iam_service.service.auth.KCLServiceImpl;
 import lombok.RequiredArgsConstructor;
 
-@Configurable
+@Component
 @RequiredArgsConstructor
 public class IdpConfig {
     @Value("${idp.enable}")

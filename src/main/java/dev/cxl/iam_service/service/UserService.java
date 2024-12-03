@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -217,12 +218,17 @@ public class UserService {
         return true;
     }
 
-    public void del(String email, String otp) {
-        User user =
-                userRespository.findByUserMail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        if (user.getEnabled()) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+    public List<UserResponse> findUserByName(String userName,int page,int size,Object attribute,String key) {
+        Pageable pageable=PageRequest.of(page-1,size,sort(attribute,key));
+        Page<User> user =
+                userRespository.findUserByUserName(userName,pageable);
+       return user.getContent().stream().map(user1 -> userMapper.toUserResponse(user1)).toList();
+
+    }
+    public Sort sort(Object attribute,String key){
+        if(key.equals("DS")){
+            return Sort.by((String) attribute).descending();
         }
-        userRespository.delete(user);
+        return Sort.by(attribute.toString()).ascending();
     }
 }

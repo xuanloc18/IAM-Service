@@ -1,6 +1,7 @@
 package dev.cxl.iam_service.controller;
 
 import java.text.ParseException;
+import java.util.List;
 
 import jakarta.validation.Valid;
 
@@ -64,7 +65,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasPermission('USER_DATA','DELETE')")
-    @DeleteMapping("/DeleteUser")
+    @DeleteMapping("/deleted")
     APIResponse<String> deleteUser(@RequestParam("userID") String userID, @RequestBody UserUpdateRequest request) {
         defaultServiceImpl.deleteSoft(userID, request);
         return APIResponse.<String>builder().result("thành công").build();
@@ -100,9 +101,22 @@ public class UserController {
         userService.replacePassword(request);
         return APIResponse.<String>builder().result("Chang password successful").build();
     }
-
     @PutMapping({"/updateInfor"})
     UserResponse updateUser(@RequestBody UserUpdateRequest request) {
         return userService.updareUser(request);
+    }
+
+    @PreAuthorize("hasPermission('USER_DATA','VIEW')")
+    @PostMapping("/search-user")
+    APIResponse<List<UserResponse>> findUserByUserName(
+           @RequestParam(value = "userName") String userName,
+           @RequestParam(value = "page")int page,
+           @RequestParam(value = "size")int size,
+           @RequestParam(value = "attribute")Object attribute,
+           @RequestParam(value = "key")String key)
+    {
+        return APIResponse.<List<UserResponse>>builder()
+                .result(userService.findUserByName(userName, page, size, attribute, key))
+                .build();
     }
 }
