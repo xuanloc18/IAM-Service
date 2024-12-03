@@ -70,3 +70,8 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     version: openapi_3_0
+
+logging:
+  file:
+    path: logs/
+    name: logs/application.log

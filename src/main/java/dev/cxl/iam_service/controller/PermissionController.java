@@ -40,11 +40,4 @@ public class PermissionController {
         permissionService.delete(permission);
         return APIResponse.<Void>builder().build();
     }
-
-    @PreAuthorize("hasPermission('PERMISSION_DATA','DELETE')")
-    @PostMapping("/{permission}/undeleted")
-    APIResponse<Void> undelete(@PathVariable String permission) {
-        permissionService.undelete(permission);
-        return APIResponse.<Void>builder().build();
-    }
 }

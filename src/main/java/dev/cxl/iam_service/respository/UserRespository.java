@@ -21,7 +21,6 @@ public interface UserRespository extends JpaRepository<User, String> {
 
     boolean existsByUserMail(String userMail);
 
-
     Page<User> findAll(Pageable pageable);
 
     // CREATE EXTENSION IF NOT EXISTS unaccent;

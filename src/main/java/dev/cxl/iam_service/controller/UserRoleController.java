@@ -25,11 +25,4 @@ public class UserRoleController {
     public APIResponse<Boolean> delete(@PathVariable("userroleid") String id) {
         return APIResponse.<Boolean>builder().result(userRoleService.delete(id)).build();
     }
-
-    @PostMapping("{userroleid}/undeleted")
-    public APIResponse<Boolean> undelete(@PathVariable("userroleid") String id) {
-        return APIResponse.<Boolean>builder()
-                .result(userRoleService.undelete(id))
-                .build();
-    }
 }

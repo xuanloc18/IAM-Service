@@ -39,11 +39,4 @@ public class RoleController {
         roleService.delete(roleId);
         return APIResponse.<Void>builder().build();
     }
-
-    @PreAuthorize("hasPermission('ROLE_DATA','DELETE')")
-    @PostMapping("/{roleId}/undeleted")
-    APIResponse<Void> undelete(@PathVariable String roleId) {
-        roleService.undelete(roleId);
-        return APIResponse.<Void>builder().build();
-    }
 }
