@@ -58,12 +58,4 @@ public class PermissionService {
         permission.setDeleted(true);
         permissionRespository.save(permission);
     }
-
-    public void undelete(String id) {
-        Permission permission = permissionRespository
-                .findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.PERMISSION_NOT_EXISTED));
-        permission.setDeleted(false);
-        permissionRespository.save(permission);
-    }
 }

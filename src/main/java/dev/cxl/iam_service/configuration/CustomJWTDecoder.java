@@ -33,9 +33,9 @@ public class CustomJWTDecoder implements JwtDecoder {
     public Jwt decode(String token) throws JwtException {
 
         try {
-            var respone = authenticationService.introspect(
+            var response = authenticationService.introspect(
                     IntrospectRequest.builder().token(token).build());
-            if (!respone.isValid()) {
+            if (!response.isValid()) {
                 throw new JwtException("token invalid");
             }
         } catch (ParseException | JOSEException e) {

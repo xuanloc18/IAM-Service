@@ -55,10 +55,4 @@ public class RoleService {
         role.setDeleted(true);
         roleRepository.save(role);
     }
-
-    public void undelete(String id) {
-        Role role = roleRepository.findByCode(id).orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
-        role.setDeleted(false);
-        roleRepository.save(role);
-    }
 }

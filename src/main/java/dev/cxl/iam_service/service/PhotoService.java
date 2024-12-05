@@ -16,6 +16,9 @@ public class PhotoService {
     @Autowired
     UserRespository userRespository;
 
+    @Autowired
+    UtilUserService utilUser;
+
     public void uploadPhoto(MultipartFile file) throws IOException {
         if (file.isEmpty()) {
             throw new RuntimeException("");
@@ -23,7 +26,7 @@ public class PhotoService {
         byte[] bytes = file.getBytes();
         String avatar = Base64.encodeBase64String(bytes);
         String id = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRespository.findById(id).orElseThrow(() -> new RuntimeException(""));
+        User user = utilUser.finUserId(id);
         user.setAvatar(avatar);
         userRespository.save(user);
     }

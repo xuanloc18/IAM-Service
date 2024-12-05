@@ -3,6 +3,7 @@ package dev.cxl.iam_service.service.auth;
 import java.text.ParseException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.nimbusds.jose.JOSEException;
@@ -13,8 +14,6 @@ import dev.cxl.iam_service.dto.request.ResetPassword;
 import dev.cxl.iam_service.dto.request.UserCreationRequest;
 import dev.cxl.iam_service.dto.request.UserUpdateRequest;
 import dev.cxl.iam_service.entity.User;
-import dev.cxl.iam_service.exception.AppException;
-import dev.cxl.iam_service.exception.ErrorCode;
 import dev.cxl.iam_service.respository.UserRespository;
 import dev.cxl.iam_service.service.*;
 
@@ -33,10 +32,13 @@ public class DefaultServiceImpl implements IAuthService {
     private UserRespository userRespository;
 
     @Autowired
-    IndentityClient indentityClient;
+    private UserKCLService userKCLService;
 
     @Autowired
-    private UserKCLService userKCLService;
+    private UtilUserService utilUser;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public Object login(AuthenticationRequest authenticationRequest) {
@@ -63,7 +65,7 @@ public class DefaultServiceImpl implements IAuthService {
 
     @Override
     public Boolean enableUser(String token, String id, UserUpdateRequest request) throws ParseException {
-        User user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User user = utilUser.finUserId(id);
         user.setEnabled(request.getEnabled());
         userRespository.save(user);
         userKCLService.enableUser(
@@ -72,25 +74,18 @@ public class DefaultServiceImpl implements IAuthService {
     }
 
     public Boolean delete(String id) {
-        User user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User user = utilUser.finUserId(id);
         user.setDeleted(true);
-        userRespository.save(user);
-        return true;
-    }
-
-    public Boolean undelete(String id) {
-        User user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        user.setDeleted(false);
         userRespository.save(user);
         return true;
     }
 
     @Override
     public Boolean resetPassword(String token, String id, ResetPassword resetPassword) throws ParseException {
-        User user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        user.setPassWord(resetPassword.getValue());
+        User user = utilUser.finUserId(id);
+        user.setPassWord(passwordEncoder.encode(resetPassword.getValue()));
         userRespository.save(user);
-        indentityClient.resetPassWord(
+        userKCLService.resetPassWord(
                 userKCLService.tokenExchangeResponse().getAccessToken(), user.getUserKCLID(), resetPassword);
         return true;
     }

@@ -16,6 +16,7 @@ public class RoleController {
     @Autowired
     RoleService roleService;
 
+    @PreAuthorize("hasPermission('ROLE_DATA','CREATE')")
     @PostMapping
     APIResponse<RoleResponse> create(@RequestBody RoleRequest request) {
         return APIResponse.<RoleResponse>builder()

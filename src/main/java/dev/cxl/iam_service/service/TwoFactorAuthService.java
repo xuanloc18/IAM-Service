@@ -3,6 +3,7 @@ package dev.cxl.iam_service.service;
 import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,15 @@ public class TwoFactorAuthService {
     @Autowired
     TwoFactorAuthRepository authRepository;
 
+    @Autowired
+    UtilUserService utilUser;
+
+    private final RedisTemplate<String, String> redisTemplate;
+
+    public TwoFactorAuthService(RedisTemplate<String, String> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+
     public static String generateOtp() {
         Integer otp = (100000 + (int) (Math.random() * 900000));
         return otp.toString();
@@ -34,9 +44,7 @@ public class TwoFactorAuthService {
 
     public boolean sendOtpMail(AuthenticationRequest authenticationRequest) {
         boolean valid = false;
-        User user = userRespository
-                .findByUserMail(authenticationRequest.getUserMail())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User user = utilUser.finUserMail(authenticationRequest.getUserMail());
         if (!user.getEnabled()) {
             throw new AppException(ErrorCode.USER_DIS_ENABLE);
         }
@@ -91,9 +99,7 @@ public class TwoFactorAuthService {
 
     public Boolean validateOtp(AuthenticationRequestTwo authenticationRequestTwo, Boolean isCreateUser) {
         Boolean valid = false;
-        User user = userRespository
-                .findByUserMail(authenticationRequestTwo.getUserMail())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User user = utilUser.finUserMail(authenticationRequestTwo.getUserMail());
         TwoFactorAuth requestTwo = authRepository
                 .findFirstByUserMailOrderByCreatedDesc(user.getUserMail())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));

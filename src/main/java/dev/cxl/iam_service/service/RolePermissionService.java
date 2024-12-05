@@ -49,13 +49,4 @@ public class RolePermissionService {
         rolePermissionRepository.save(rolePermission);
         return true;
     }
-
-    public boolean undelete(String id) {
-        RolePermission rolePermission = rolePermissionRepository
-                .findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.ROLE_PERMISSION_NOT_EXISTED));
-        rolePermission.setDeleted(false);
-        rolePermissionRepository.save(rolePermission);
-        return true;
-    }
 }

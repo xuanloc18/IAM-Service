@@ -29,7 +29,7 @@ public class SecurityConfig {
     };
 
     private final String[] SWAGGER_ENDPOINT = {
-        "/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui/index.html"
+        "/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui/index.html","users/confirmCreateUser"
     };
 
     @Value("${idp.enable}")
@@ -74,11 +74,6 @@ public class SecurityConfig {
     }
 
     @Bean
-    PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(10);
-    }
-
-    @Bean
     CustomPermissionEvaluator customPermissionEvaluator() {
         return new CustomPermissionEvaluator();
     }
@@ -88,5 +83,10 @@ public class SecurityConfig {
         DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
         expressionHandler.setPermissionEvaluator(customPermissionEvaluator());
         return expressionHandler;
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(10);
     }
 }
