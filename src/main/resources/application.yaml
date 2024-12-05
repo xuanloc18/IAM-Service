@@ -29,6 +29,10 @@ spring:
       ddl-auto: update
       dialect: org.hibernate.dialect.PostgreSQLDialect  # Chỉ định Dialect cho PostgreSQL
     show-sql: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 security:
   authentication:

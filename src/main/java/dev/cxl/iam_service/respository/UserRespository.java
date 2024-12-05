@@ -13,12 +13,10 @@ import org.springframework.stereotype.Repository;
 import dev.cxl.iam_service.entity.User;
 
 @Repository
-public interface UserRespository extends JpaRepository<User, String>{
+public interface UserRespository extends JpaRepository<User, String> {
     Optional<User> findByUserMail(String userMail);
 
     Optional<User> findByUserKCLID(String string);
-
-    boolean deleteByUserMail(String userMail);
 
     boolean existsByUserMail(String userMail);
 

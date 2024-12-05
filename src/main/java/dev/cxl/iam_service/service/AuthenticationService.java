@@ -87,7 +87,7 @@ public class AuthenticationService {
     public AuthenticationResponse authenticate(AuthenticationRequestTwo authenticationRequestTwo)
             throws ParseException {
         User user = userUtil.finUserMail(authenticationRequestTwo.getUserMail());
-        Boolean check = twoFactorAuthService.validateOtp(authenticationRequestTwo, false);
+        Boolean check = twoFactorAuthService.validateOtp(authenticationRequestTwo);
         if (!check) {
             throw new AppException(ErrorCode.INVALID_OTP);
         }

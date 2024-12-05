@@ -85,7 +85,7 @@ public class UserService {
     public UserResponse confirmCreateUser(String email, String otp) {
         User user = utilUser.finUserMail(email);
         Boolean check = twoFactorAuthService.validateOtp(
-                AuthenticationRequestTwo.builder().userMail(email).otp(otp).build(), true);
+                AuthenticationRequestTwo.builder().userMail(email).otp(otp).build());
         if (!check) {
             throw new AppException(ErrorCode.INVALID_OTP);
         }

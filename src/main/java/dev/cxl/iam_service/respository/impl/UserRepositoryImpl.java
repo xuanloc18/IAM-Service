@@ -1,13 +1,16 @@
 package dev.cxl.iam_service.respository.impl;
 
 import dev.cxl.iam_service.dto.request.UserSearchRequest;
+import dev.cxl.iam_service.dto.response.UserResponse;
 import dev.cxl.iam_service.entity.User;
+import dev.cxl.iam_service.mapper.UserMapper;
 import dev.cxl.iam_service.respository.UserRespository;
 import dev.cxl.iam_service.respository.custom.UserRepositoryCustom;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -18,6 +21,8 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 
     @PersistenceContext
     private EntityManager entityManager;
+    @Autowired
+    UserMapper  userMapper;
 
     @Override
     public List<User> search(UserSearchRequest request) {
