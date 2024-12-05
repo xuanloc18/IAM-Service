@@ -19,19 +19,31 @@ public interface PermissionRespository extends JpaRepository<Permission, String>
 
     Optional<Permission> findByResourceCodeAndScope(String resourceCode, String scope);
 
-    @Query("SELECT p.id FROM Permission p " + "JOIN RolePermission rp ON p.id = rp.permissionId "
+    @Query("SELECT p.id FROM Permission p "
+            + "JOIN RolePermission rp ON p.id = rp.permissionId "
             + "JOIN UserRole ur ON rp.roleId = ur.roleID "
+            + "JOIN Role r ON r.id = ur.roleID "
             + "JOIN User u ON ur.userID = u.userID "
             + "WHERE u.userID = :userID "
+            + "AND p.deleted = false "
+            + "AND ur.deleted = false "
+            + "AND r.deleted = false "
+            + "AND rp.deleted = false "
             + "AND p.resourceCode = :resourceCode "
             + "AND p.scope = :scope ")
     Optional<String> findPermissionIdByUserAndScope(
             @Param("userID") String userID, @Param("resourceCode") String resourceCode, @Param("scope") String scope);
 
-    @Query("SELECT p.id FROM Permission p " + "JOIN RolePermission rp ON p.id = rp.permissionId "
+    @Query("SELECT p.id FROM Permission p "
+            + "JOIN RolePermission rp ON p.id = rp.permissionId "
             + "JOIN UserRole ur ON rp.roleId = ur.roleID "
+            + "JOIN Role r ON r.id = ur.roleID "
             + "JOIN User u ON ur.userID = u.userID "
             + "WHERE u.userKCLID = :userKCLID "
+            + "AND p.deleted =false "
+            + "AND ur.deleted = false "
+            + "AND r.deleted = false "
+            + "AND rp.deleted = false "
             + "AND p.resourceCode = :resourceCode "
             + "AND p.scope = :scope ")
     Optional<String> findPermissionIdByUserKCLAndScope(

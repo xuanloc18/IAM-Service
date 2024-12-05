@@ -55,10 +55,6 @@ public class AuthenticationService {
     @Value("${jwt.refreshable-duration}")
     protected Long REFESHABLE_DURATION;
 
-    @NonFinal
-    @Autowired
-    private InvalidateTokenRepository invalidateTokenRepository;
-
     @Autowired
     KeyProvider keyProvider;
 
@@ -69,7 +65,13 @@ public class AuthenticationService {
     private TwoFactorAuthService twoFactorAuthService;
 
     @Autowired
-    private InvalidRefreshTokenRepository invalidRefreshTokenRepository;
+    private InvalidateRefreshTokenService invalidateRefreshTokenService;
+
+    @Autowired
+    private InvalidateTokenService invalidateTokenService;
+
+    @Autowired
+    private UtilUserService userUtil;
 
     public IntrospectResponse introspect(IntrospectRequest request) throws JOSEException, ParseException {
         var token = request.getToken();
@@ -84,10 +86,8 @@ public class AuthenticationService {
 
     public AuthenticationResponse authenticate(AuthenticationRequestTwo authenticationRequestTwo)
             throws ParseException {
-        User user = userRespository
-                .findByUserMail(authenticationRequestTwo.getUserMail())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
-        Boolean check = twoFactorAuthService.validateOtp(authenticationRequestTwo, false);
+        User user = userUtil.finUserMail(authenticationRequestTwo.getUserMail());
+        Boolean check = twoFactorAuthService.validateOtp(authenticationRequestTwo);
         if (!check) {
             throw new AppException(ErrorCode.INVALID_OTP);
         }
@@ -104,8 +104,7 @@ public class AuthenticationService {
     }
 
     public String generrateToken(String mail) {
-        User user =
-                (userRespository.findByUserMail(mail)).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User user = userUtil.finUserMail(mail);
         JWSHeader header = new JWSHeader(JWSAlgorithm.RS256);
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getUserID().toString())
@@ -160,9 +159,7 @@ public class AuthenticationService {
         if (!(veri && expiryTime.after(new Date()))) {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
-        if (invalidateTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
-        }
+        invalidateTokenService.checkExits(signedJWT.getJWTClaimsSet().getJWTID());
         return signedJWT;
     }
 
@@ -174,12 +171,8 @@ public class AuthenticationService {
             String tokenID = signToken.getJWTClaimsSet().getJWTID();
             String refreshTokenID = signRefreshToken.getJWTClaimsSet().getJWTID();
             String userID = signToken.getJWTClaimsSet().getSubject();
-
-            InvalidateToken invalidateToken =
-                    InvalidateToken.builder().id(tokenID).build();
-            invalidateTokenRepository.save(invalidateToken);
-            invalidRefreshTokenRepository.save(
-                    InvalidateRefreshToken.builder().id(refreshTokenID).build());
+            invalidateTokenService.invalid(tokenID);
+            invalidateRefreshTokenService.invalid(refreshTokenID);
 
             // activity
             activityService.createHistoryActivity(userID, UserAction.LOGOUT);
@@ -191,27 +184,21 @@ public class AuthenticationService {
         }
     }
 
-    public TokenExchangeResponseUser refreshToken(String refreshTokenn) throws ParseException, JOSEException {
-        SignedJWT signedJWT = SignedJWT.parse(refreshTokenn);
-        Boolean check = invalidRefreshTokenRepository.existsById(
-                signedJWT.getJWTClaimsSet().getJWTID());
-        if (check) throw new AppException(ErrorCode.UNAUTHENTICATED);
-        verifyToken(refreshTokenn);
+    public TokenExchangeResponseUser refreshToken(String refreshToken) throws ParseException, JOSEException {
+        SignedJWT signedJWT = SignedJWT.parse(refreshToken);
+        invalidateRefreshTokenService.checkExits(signedJWT);
+        verifyToken(refreshToken);
         String userId = signedJWT.getJWTClaimsSet().getSubject();
         String tokenId = signedJWT.getJWTClaimsSet().getStringClaim("idToken");
-        InvalidateToken invalidateToken = InvalidateToken.builder().id(tokenId).build();
-        invalidateTokenRepository.save(invalidateToken);
-        invalidRefreshTokenRepository.save(InvalidateRefreshToken.builder()
-                .id(signedJWT.getJWTClaimsSet().getJWTID())
-                .build());
+        invalidateTokenService.invalid(tokenId);
+        invalidateRefreshTokenService.invalid(signedJWT.getJWTClaimsSet().getJWTID());
         User user = userRespository.findById(userId).orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
         var token = generrateToken(user.getUserMail());
         SignedJWT signedJWT1 = SignedJWT.parse(token);
-        var refeshToken =
-                generrateRefreshToken(userId, signedJWT1.getJWTClaimsSet().getJWTID());
         return TokenExchangeResponseUser.builder()
                 .accessToken(token)
-                .refreshToken(refeshToken)
+                .refreshToken(generrateRefreshToken(
+                        userId, signedJWT1.getJWTClaimsSet().getJWTID()))
                 .build();
     }
 }

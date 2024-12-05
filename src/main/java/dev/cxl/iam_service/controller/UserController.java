@@ -3,6 +3,8 @@ package dev.cxl.iam_service.controller;
 import java.text.ParseException;
 import java.util.List;
 
+import dev.cxl.iam_service.entity.User;
+import dev.cxl.iam_service.respository.custom.UserRepositoryCustom;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,9 @@ public class UserController {
     @Autowired
     DefaultServiceImpl defaultServiceImpl;
 
+    @Autowired
+    UserRepositoryCustom userRepository;
+
     @PreAuthorize("hasPermission('USER_DATA','VIEW')")
     @GetMapping
     APIResponse<PageResponse<UserResponse>> getAllUser(
@@ -45,7 +50,7 @@ public class UserController {
         return APIResponse.<String>builder().result("").build();
     }
 
-    @PostMapping("/confirmCreateUser")
+    @GetMapping("/confirmCreateUser")
     APIResponse<String> confirmCreateUser(@RequestParam("email") String email, @RequestParam("otp") String otp) {
         userService.confirmCreateUser(email, otp);
         return APIResponse.<String>builder()
@@ -118,6 +123,13 @@ public class UserController {
             @RequestParam(value = "sort") String Sort) {
         return APIResponse.<List<UserResponse>>builder()
                 .result(userService.findUserByKey(keyWord, page, size, attribute, Sort))
+                .build();
+    }
+    @PreAuthorize("hasPermission('USER_DATA','VIEW')")
+    @GetMapping("/search")
+    public APIResponse<List<User>> getUsers(@ModelAttribute UserSearchRequest request){
+        return APIResponse.<List<User>>builder()
+                .result(userRepository.search(request))
                 .build();
     }
 }

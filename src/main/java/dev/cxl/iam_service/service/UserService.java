@@ -11,13 +11,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 
+import dev.cxl.iam_service.configuration.SecurityUtils;
 import dev.cxl.iam_service.dto.request.*;
 import dev.cxl.iam_service.dto.response.PageResponse;
 import dev.cxl.iam_service.dto.response.UserResponse;
@@ -64,6 +64,9 @@ public class UserService {
     @Autowired
     UserKCLService userKCLService;
 
+    @Autowired
+    UtilUserService utilUser;
+
     @Value("${idp.enable}")
     Boolean idpEnable;
 
@@ -80,10 +83,9 @@ public class UserService {
     }
 
     public UserResponse confirmCreateUser(String email, String otp) {
-        User user =
-                userRespository.findByUserMail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User user = utilUser.finUserMail(email);
         Boolean check = twoFactorAuthService.validateOtp(
-                AuthenticationRequestTwo.builder().userMail(email).otp(otp).build(), true);
+                AuthenticationRequestTwo.builder().userMail(email).otp(otp).build());
         if (!check) {
             throw new AppException(ErrorCode.INVALID_OTP);
         }
@@ -110,8 +112,8 @@ public class UserService {
     }
 
     public UserResponse updareUser(UserUpdateRequest request) {
-        String userID = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRespository.findById(userID).orElseThrow(() -> new RuntimeException("user not found"));
+        String userID = SecurityUtils.getAuthenticatedUserID();
+        User user = utilUser.finUserId(userID);
         user = userMapper.updateUser(user, request);
         user.setPassWord(passwordEncoder.encode(request.getPassWord()));
 
@@ -121,13 +123,12 @@ public class UserService {
     }
 
     public UserResponse getMyInfor() {
-        var context = SecurityContextHolder.getContext();
-        String id = context.getAuthentication().getName();
+        String id = SecurityUtils.getAuthenticatedUserID();
         User user;
         if (idpEnable) {
-            user = userRespository.findByUserKCLID(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+            user = utilUser.finUserKCLId(id);
         } else {
-            user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+            user = utilUser.finUserId(id);
         }
 
         return userMapper.toUserResponse(user);
@@ -136,18 +137,17 @@ public class UserService {
     public UserResponse getInfor(String id) {
         User user;
         if (idpEnable) {
-            user = userRespository.findByUserKCLID(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+            user = utilUser.finUserKCLId(id);
         } else {
-            user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+            user = utilUser.finUserId(id);
         }
 
         return userMapper.toUserResponse(user);
     }
 
     public Boolean replacePassword(UserRepalcePass userRepalcePass) {
-        var context = SecurityContextHolder.getContext();
-        String id = context.getAuthentication().getName();
-        User user = userRespository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        String id = SecurityUtils.getAuthenticatedUserID();
+        User user = utilUser.finUserId(id);
         log.info(user.getUserMail());
         log.info(user.getPassWord());
         Boolean checkPass = passwordEncoder.matches(userRepalcePass.getOldPassword(), user.getPassWord());
@@ -165,7 +165,7 @@ public class UserService {
     }
 
     public String sendtoken(String email) {
-        userRespository.findByUserMail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        utilUser.finUserMail(email);
         String token = authenticationService.generrateToken(email);
         emailService.SendEmail(email, token);
         return "Chúc bạn thành công";
@@ -179,7 +179,7 @@ public class UserService {
         }
         SignedJWT signedJWT = SignedJWT.parse(forgotPassWord.getToken());
         String userid = signedJWT.getJWTClaimsSet().getSubject();
-        User user = userRespository.findById(userid).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User user = utilUser.finUserId(userid);
         user.setPassWord(passwordEncoder.encode(forgotPassWord.getNewPass()));
         userRespository.save(user);
 

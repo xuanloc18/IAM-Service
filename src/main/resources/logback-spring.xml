@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Define the File Appender -->
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/application.log</file>  <!-- File log sẽ được ghi -->
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern> <!-- Định dạng log -->
+        </encoder>
+    </appender>
+
+    <!-- Set log level and reference the file appender -->
+    <root level="INFO">
+        <appender-ref ref="FILE"/> <!-- Liên kết với appender FILE đã định nghĩa -->
+    </root>
+
+    <!-- Optionally, you can add console logging as well -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Reference the console appender if you also want console output -->
+    <root level="INFO">
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

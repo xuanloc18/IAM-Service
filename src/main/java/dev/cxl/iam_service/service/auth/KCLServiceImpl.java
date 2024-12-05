@@ -31,6 +31,9 @@ public class KCLServiceImpl implements IAuthService {
     @Autowired
     PasswordEncoder passwordEncoder;
 
+    @Autowired
+    UtilUserService utilUser;
+
     @Override
     public Object login(AuthenticationRequest authenticationRequest) {
         return userKCLService.tokenExchangeResponseUser(authenticationRequest);
@@ -64,8 +67,9 @@ public class KCLServiceImpl implements IAuthService {
 
     @Override
     public Boolean resetPassword(String token, String id, ResetPassword resetPassword) throws ParseException {
-        userKCLService.resetPassWord(userKCLService.tokenExchangeResponse().getAccessToken(), id, resetPassword);
-        User user = userRespository.findByUserKCLID(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        User user = utilUser.finUserId(id);
+        userKCLService.resetPassWord(
+                userKCLService.tokenExchangeResponse().getAccessToken(), user.getUserKCLID(), resetPassword);
         user.setPassWord(passwordEncoder.encode(resetPassword.getValue()));
         userRespository.save(user);
         return null;

@@ -33,6 +33,9 @@ public class UserKCLService {
     @NonFinal
     String idpClientSecret;
 
+    @Autowired
+    UtilUserService utilUser;
+
     public String createUserKCL(UserCreationRequest request) {
 
         var creationResponse = indentityClient.createUser(
