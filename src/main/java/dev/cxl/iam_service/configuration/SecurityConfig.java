@@ -29,7 +29,7 @@ public class SecurityConfig {
     };
 
     private final String[] SWAGGER_ENDPOINT = {
-        "/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui/index.html","users/confirmCreateUser"
+        "/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui/index.html", "users/confirmCreateUser"
     };
 
     @Value("${idp.enable}")
@@ -45,10 +45,11 @@ public class SecurityConfig {
                 .requestMatchers(SWAGGER_ENDPOINT)
                 .permitAll()
                 .anyRequest()
-                .authenticated());
+                .permitAll());
         if (idpEnable) {
             httpSecurity.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
         } else {
+
             httpSecurity.oauth2ResourceServer(
                     oauth -> oauth.jwt(jwtConfigurer -> jwtConfigurer
                                     .decoder(jwtDecoder)

@@ -49,7 +49,7 @@ public class TwoFactorAuthService {
         }
         String otp = generateOtp();
         emailService.SendEmail(user.getUserMail(), otp);
-        redisTemplate.opsForValue().set(user.getUserMail(), otp,5, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(user.getUserMail(), otp, 5, TimeUnit.MINUTES);
 
         return true;
     }
@@ -64,19 +64,18 @@ public class TwoFactorAuthService {
         message.append(otp);
         message.append("\">Xác nhận tài khoản</a><br>");
         emailService.SendEmail(email, message.toString());
-        redisTemplate.opsForValue().set(email, otp,5, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(email, otp, 5, TimeUnit.MINUTES);
         return true;
     }
 
     public Boolean validateOtp(AuthenticationRequestTwo authenticationRequestTwo) {
 
         User user = utilUser.finUserMail(authenticationRequestTwo.getUserMail());
-        String otp=redisTemplate.opsForValue().get(user.getUserMail());
+        String otp = redisTemplate.opsForValue().get(user.getUserMail());
         if (otp != null && otp.equals(authenticationRequestTwo.getOtp())) {
             redisTemplate.delete(authenticationRequestTwo.getUserMail()); // Xóa OTP khỏi Redis
             return true;
-        }
-        else{
+        } else {
             return false;
         }
     }

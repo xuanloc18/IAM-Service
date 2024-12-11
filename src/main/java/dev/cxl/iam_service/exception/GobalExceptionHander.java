@@ -1,6 +1,5 @@
 package dev.cxl.iam_service.exception;
 
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -10,8 +9,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import dev.cxl.iam_service.dto.response.APIResponse;
 import lombok.extern.log4j.Log4j2;
-
-import java.util.logging.Logger;
 
 @Log4j2
 @ControllerAdvice
@@ -27,7 +24,8 @@ public class GobalExceptionHander {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<APIResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
+    public ResponseEntity<APIResponse> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException exception) {
         String enumKey = exception.getFieldError().getDefaultMessage();
         ErrorCode errorCode = ErrorCode.valueOf(enumKey);
         APIResponse apiResponse = new APIResponse();

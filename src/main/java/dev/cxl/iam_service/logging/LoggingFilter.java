@@ -1,9 +1,15 @@
 package dev.cxl.iam_service.logging;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
@@ -13,22 +19,18 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Component
-@Order(Ordered.LOWEST_PRECEDENCE)  // Đảm bảo filter này chạy sau các filter khác
+@Order(Ordered.LOWEST_PRECEDENCE) // Đảm bảo filter này chạy sau các filter khác
 public class LoggingFilter implements Filter {
     private static final Logger logger = LoggerFactory.getLogger(LoggingFilter.class);
 
     private final ObjectMapper objectMapper = new ObjectMapper(); // Jackson ObjectMapper để xử lý JSON
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+            throws IOException, ServletException {
         // Đảm bảo request được wrap lại để có thể đọc body nhiều lần
         HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         ContentCachingRequestWrapper cachingRequestWrapper = new ContentCachingRequestWrapper(httpServletRequest);
@@ -42,7 +44,7 @@ public class LoggingFilter implements Filter {
         // Log các tham số của request (trừ password)
         Map<String, String[]> parameterMap = httpServletRequest.getParameterMap();
         Map<String, String> sanitizedParams = parameterMap.entrySet().stream()
-                .filter(entry -> !entry.getKey().equalsIgnoreCase("password"))  // Loại bỏ 'password'
+                .filter(entry -> !entry.getKey().equalsIgnoreCase("password")) // Loại bỏ 'password'
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> Arrays.toString(e.getValue())));
 
         // Chỉnh sửa body để ẩn password
@@ -64,7 +66,8 @@ public class LoggingFilter implements Filter {
 
         // Nếu lỗi 500, log cả request và response
         if (status == 500) {
-            logger.error("Error occurred - Response Status: 500, Request - Method: {} URI: {}, Params: {}, Body: {}",
+            logger.error(
+                    "Error occurred - Response Status: 500, Request - Method: {} URI: {}, Params: {}, Body: {}",
                     httpServletRequest.getMethod(),
                     httpServletRequest.getRequestURI(),
                     sanitizedParams,

@@ -1,33 +1,36 @@
 package dev.cxl.iam_service.respository.impl;
 
-import dev.cxl.iam_service.dto.request.UserSearchRequest;
-import dev.cxl.iam_service.dto.response.UserResponse;
-import dev.cxl.iam_service.entity.User;
-import dev.cxl.iam_service.mapper.UserMapper;
-import dev.cxl.iam_service.respository.UserRespository;
-import dev.cxl.iam_service.respository.custom.UserRepositoryCustom;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.Query;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import dev.cxl.iam_service.dto.request.UserSearchRequest;
+import dev.cxl.iam_service.entity.User;
+import dev.cxl.iam_service.mapper.UserMapper;
+import dev.cxl.iam_service.respository.custom.UserRepositoryCustom;
+
 @Service
 public class UserRepositoryImpl implements UserRepositoryCustom {
 
     @PersistenceContext
     private EntityManager entityManager;
+
     @Autowired
-    UserMapper  userMapper;
+    UserMapper userMapper;
 
     @Override
     public List<User> search(UserSearchRequest request) {
         Map<String, Object> values = new HashMap<>();
-        String sql = "select u from User u " + createWhereQuery(request, values) + createOrderQuery(request.getSortBy());
+        String sql =
+                "select u from User u " + createWhereQuery(request, values) + createOrderQuery(request.getSortBy());
         Query query = entityManager.createQuery(sql, User.class);
         values.forEach(query::setParameter);
         query.setFirstResult((request.getPageIndex() - 1) * request.getPageSize());
@@ -46,14 +49,13 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 
     private String createWhereQuery(UserSearchRequest request, Map<String, Object> values) {
         StringBuilder sql = new StringBuilder();
-//        sql.append(" left join RoleEntity r on (e.roleId = r.id) ");
+        //        sql.append(" left join RoleEntity r on (e.roleId = r.id) ");
         sql.append(" where u.deleted = false");
         if (StringUtils.isNotBlank(request.getKeyword())) {
-            sql.append(
-                    " and ( lower(u.userName) like :keyword"
-                            + " or lower(u.userMail) like :keyword"
-                            + " or lower(u.firstName) like :keyword"
-                            + " or lower(u.lastName) like :keyword) ");
+            sql.append(" and ( lower(u.userName) like :keyword"
+                    + " or lower(u.userMail) like :keyword"
+                    + " or lower(u.firstName) like :keyword"
+                    + " or lower(u.lastName) like :keyword) ");
             values.put("keyword", "%" + request.getKeyword().toLowerCase() + "%");
         }
         if (StringUtils.isNotBlank(request.getUserName())) {
@@ -68,7 +70,7 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
     }
 
     public StringBuilder createOrderQuery(String sortBy) {
-        StringBuilder hql = new StringBuilder(" ");
+        StringBuilder hql = new StringBuilder("");
         if (StringUtils.isNotBlank(sortBy)) {
             hql.append(" order by u.").append(sortBy.replace(".", " "));
         } else {
@@ -77,4 +79,3 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
         return hql;
     }
 }
-

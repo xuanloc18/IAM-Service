@@ -1,5 +1,7 @@
 package dev.cxl.iam_service.mapper;
 
+import java.util.List;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 
@@ -7,8 +9,6 @@ import dev.cxl.iam_service.dto.request.UserCreationRequest;
 import dev.cxl.iam_service.dto.request.UserUpdateRequest;
 import dev.cxl.iam_service.dto.response.UserResponse;
 import dev.cxl.iam_service.entity.User;
-
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {

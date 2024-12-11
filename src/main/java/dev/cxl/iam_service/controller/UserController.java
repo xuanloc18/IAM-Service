@@ -3,8 +3,6 @@ package dev.cxl.iam_service.controller;
 import java.text.ParseException;
 import java.util.List;
 
-import dev.cxl.iam_service.entity.User;
-import dev.cxl.iam_service.respository.custom.UserRepositoryCustom;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +14,8 @@ import dev.cxl.iam_service.dto.request.*;
 import dev.cxl.iam_service.dto.response.APIResponse;
 import dev.cxl.iam_service.dto.response.PageResponse;
 import dev.cxl.iam_service.dto.response.UserResponse;
+import dev.cxl.iam_service.entity.User;
+import dev.cxl.iam_service.respository.custom.UserRepositoryCustom;
 import dev.cxl.iam_service.service.UserService;
 import dev.cxl.iam_service.service.auth.DefaultServiceImpl;
 
@@ -125,9 +125,10 @@ public class UserController {
                 .result(userService.findUserByKey(keyWord, page, size, attribute, Sort))
                 .build();
     }
+
     @PreAuthorize("hasPermission('USER_DATA','VIEW')")
     @GetMapping("/search")
-    public APIResponse<List<User>> getUsers(@ModelAttribute UserSearchRequest request){
+    public APIResponse<List<User>> getUsers(@ModelAttribute UserSearchRequest request) {
         return APIResponse.<List<User>>builder()
                 .result(userRepository.search(request))
                 .build();

@@ -41,20 +41,6 @@ security:
       key-store-password: cxlcxl
       key-alias: viz
 
-#keycloak:
-#  auth-server-url: http://localhost:8080/auth  # URL của Keycloak Server
-#  realm: CXL  # Tên Realm trong Keycloak
-#  resource: iam-service  # Client ID trong Keycloak
-#  credentials:
-#    secret: EEQnppsmXZDGIVhYOqJTGfiT47yY60qC  # Client Secret của client trong Keycloak
-#  bearer-only: true  # Chỉ cho phép Bearer Token trong ứng dụng
-#  security-constraints:
-#    - authRoles:
-#        - user  # Các role người dùng cần có để truy cập API
-#      securityCollections:
-#        - patterns:
-#            - /api/*  # Bảo vệ các API có pattern là /api/*
-
 jwt:
   valid-duration: 3600 #in second
   refreshable-duration: 360000 #insecond
@@ -83,7 +69,9 @@ springdoc:
     path: logs                  # Thư mục chứa log (nếu không chỉ định file cụ thể)
     max-size: 10MB
     max-history: 30
-
+storage:
+  service:
+    url: http://localhost:8099/storage
 
 
 
