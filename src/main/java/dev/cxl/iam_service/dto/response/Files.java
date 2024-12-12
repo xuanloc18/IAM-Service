@@ -1,7 +1,8 @@
 package dev.cxl.iam_service.dto.response;
 
-import dev.cxl.iam_service.entity.AuditableEntity;
 import jakarta.persistence.*;
+
+import dev.cxl.iam_service.entity.AuditableEntity;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 

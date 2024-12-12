@@ -7,18 +7,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 
 import dev.cxl.iam_service.configuration.SecurityUtils;
 import dev.cxl.iam_service.dto.request.*;
+import dev.cxl.iam_service.dto.response.APIResponse;
 import dev.cxl.iam_service.dto.response.PageResponse;
 import dev.cxl.iam_service.dto.response.UserResponse;
 import dev.cxl.iam_service.entity.InvalidateToken;
@@ -29,6 +33,7 @@ import dev.cxl.iam_service.exception.ErrorCode;
 import dev.cxl.iam_service.mapper.UserMapper;
 import dev.cxl.iam_service.respository.InvalidateTokenRepository;
 import dev.cxl.iam_service.respository.UserRespository;
+import dev.cxl.iam_service.service.storage.StorageClient;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
@@ -66,6 +71,9 @@ public class UserService {
 
     @Autowired
     UtilUserService utilUser;
+
+    @Autowired
+    StorageClient client;
 
     @Value("${idp.enable}")
     Boolean idpEnable;
@@ -162,6 +170,22 @@ public class UserService {
         activityService.createHistoryActivity(user.getUserID(), UserAction.CHANGE_PASSWORD);
         userRespository.save(user);
         return true;
+    }
+
+    public Boolean createProfile(MultipartFile file) {
+        String id = SecurityUtils.getAuthenticatedUserID();
+        User user = utilUser.finUserId(id);
+        APIResponse<String> apiResponse = client.createProfile(file, SecurityUtils.getAuthenticatedUserID());
+        user.setProfile(apiResponse.getResult());
+        userRespository.save(user);
+        return true;
+    }
+
+    public ResponseEntity<Resource> viewProfile() {
+        String userID = SecurityUtils.getAuthenticatedUserID();
+        User user = utilUser.finUserId(userID);
+        ResponseEntity<Resource> response = client.downloadFile(user.getProfile());
+        return ResponseEntity.ok().headers(response.getHeaders()).body(response.getBody());
     }
 
     public String sendtoken(String email) {

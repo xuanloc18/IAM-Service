@@ -24,6 +24,9 @@ public class User extends AuditableEntity {
     @Column(name = "user_kcl_id")
     String userKCLID;
 
+    @Column(name = "user_profile")
+    String profile;
+
     @Column(name = "user_name")
     String userName;
 

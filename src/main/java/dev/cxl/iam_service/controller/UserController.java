@@ -6,8 +6,10 @@ import java.util.List;
 import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import dev.cxl.iam_service.configuration.IdpConfig;
 import dev.cxl.iam_service.dto.request.*;
@@ -18,6 +20,7 @@ import dev.cxl.iam_service.entity.User;
 import dev.cxl.iam_service.respository.custom.UserRepositoryCustom;
 import dev.cxl.iam_service.service.UserService;
 import dev.cxl.iam_service.service.auth.DefaultServiceImpl;
+import dev.cxl.iam_service.service.storage.StorageClient;
 
 @RestController
 @RequestMapping("/users")
@@ -33,6 +36,9 @@ public class UserController {
 
     @Autowired
     UserRepositoryCustom userRepository;
+
+    @Autowired
+    StorageClient client;
 
     @PreAuthorize("hasPermission('USER_DATA','VIEW')")
     @GetMapping
@@ -132,5 +138,17 @@ public class UserController {
         return APIResponse.<List<User>>builder()
                 .result(userRepository.search(request))
                 .build();
+    }
+
+    @GetMapping("/createProfile")
+    public APIResponse<Boolean> createProfile(@RequestPart("file") MultipartFile file) {
+        return APIResponse.<Boolean>builder()
+                .result(userService.createProfile(file))
+                .build();
+    }
+
+    @GetMapping("/viewProfile")
+    public ResponseEntity<?> viewProfile() {
+        return userService.viewProfile();
     }
 }
